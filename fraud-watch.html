@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fraud Watch - CRM</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="fraudWatch" data-nav-module="fraud">
+  <div class="app-frame">
+    <aside class="side-nav" aria-label="CRM navigation">
+      <a class="side-nav-logo" href="home.html">CRM</a>
+      <nav>
+        <a href="home.html" data-nav-module="home">Home</a>
+        <a href="index.html" data-nav-module="lookup">Search</a>
+        <a href="leads.html" data-nav-module="leads">Leads</a>
+        <a href="offers.html" data-nav-module="offers">Offers</a>
+        <a href="fraud-watch.html" data-nav-module="fraud">Fraud Risk</a>
+        <a href="meetings.html" data-nav-module="meetings">Meetings</a>
+        <a href="pipeline.html" data-nav-module="pipeline">Pipeline</a>
+        <a href="profitability.html" data-nav-module="profitability">Profitability</a>
+        <a href="activity.html" data-nav-module="activity">Activity</a>
+      </nav>
+    </aside>
+    <main class="list-shell">
+      <header class="list-topbar">
+        <div>
+          <p class="eyebrow">Protection</p>
+          <h1>Fraud Risk Watch</h1>
+          <p id="fraudWatchSubtitle">Loading risk records</p>
+        </div>
+        <span class="access-pill" id="pageRoleLabel">Role Access</span>
+      </header>
+      <section id="restrictedState" class="not-found hidden">
+        <h1>Restricted Access</h1>
+        <p>This page is restricted for the current role.</p>
+        <a class="primary-link" href="home.html">Return home</a>
+      </section>
+      <section class="filter-bar" data-page-content>
+        <div class="filter-group">
+          <label class="search-control">
+            <span>Search</span>
+            <input id="pageSearchInput" type="search" placeholder="Client, CIF, score, or risk tier">
+          </label>
+          <label class="filter-dropdown">
+            <span>Risk tier</span>
+            <select id="pageFilterSelect">
+              <option value="all">All tiers</option>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </label>
+          <label class="filter-dropdown">
+            <span>Sort</span>
+            <select id="pageSortSelect">
+              <option value="score-desc">Score high to low</option>
+              <option value="score-asc">Score low to high</option>
+              <option value="name-asc">Name A-Z</option>
+              <option value="tier-desc">Tier</option>
+            </select>
+          </label>
+        </div>
+      </section>
+      <section class="list-container" data-page-content>
+        <div class="table-wrapper">
+          <table class="data-table" role="grid">
+            <thead>
+              <tr><th>Record</th><th>Score</th><th>Tier</th><th>Cases</th><th>Last Reviewed</th><th>Action</th></tr>
+            </thead>
+            <tbody id="fraudWatchTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="data.js"></script>
+  <script src="api.js"></script>
+  <script src="crm-pages.js"></script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Wealth Profile</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="crm-shell">
+    <header class="client-topbar">
+      <div class="topbar-links">
+        <a class="back-link" href="home.html">Home</a>
+        <a class="back-link" href="index.html">Lookup</a>
+      </div>
+      <span class="access-pill">Wealth Client Profile</span>
+    </header>
+
+    <section id="wealthNotFoundState" class="not-found hidden">
+      <h1>Wealth profile not found</h1>
+      <p id="wealthNotFoundMessage">No matching wealth client was found.</p>
+      <a class="primary-link" href="index.html">Return to search</a>
+    </section>
+
+    <article id="wealthProfile" class="client-profile hidden">
+      <header class="profile-hero">
+        <div>
+          <p class="eyebrow">Wealth Management</p>
+          <h1 id="wealthCustomerName">Customer Name</h1>
+          <p id="wealthCustomerMeta">Account and CIF</p>
+        </div>
+        <div class="profile-actions">
+          <a class="profile-action-card discover-card" id="wealthClient360Link" href="client.html">
+            <span>Client 360</span>
+            <strong>Full View</strong>
+            <small>Account relationship</small>
+          </a>
+          <section class="profile-action-card fraud-matrix-card score-only" aria-label="Fraud score summary">
+            <span>Fraud Score</span>
+            <strong id="wealthFraudScore">0 / 100</strong>
+            <small id="wealthFraudTier">Score only</small>
+          </section>
+        </div>
+      </header>
+
+      <section class="summary-grid" aria-label="Wealth summary">
+        <article class="summary-card">
+          <span>Total Relationship</span>
+          <strong id="wealthHouseholdBalance">$0</strong>
+        </article>
+        <article class="summary-card">
+          <span>Invested Balance</span>
+          <strong id="wealthInvestedBalance">$0</strong>
+        </article>
+        <article class="summary-card">
+          <span>Affluency Tier</span>
+          <strong id="wealthAffluencyTier">0 of 3</strong>
+        </article>
+        <article class="summary-card">
+          <span>Wealth Advisor</span>
+          <strong id="wealthAdvisorName">Advisor</strong>
+        </article>
+      </section>
+
+      <section class="details-grid">
+        <article class="detail-card">
+          <h2>Investment Portfolio</h2>
+          <ul id="portfolioList" class="record-list"></ul>
+        </article>
+
+        <article class="detail-card">
+          <h2>Asset Allocation</h2>
+          <div id="allocationList" class="profitability-list"></div>
+        </article>
+
+        <article class="detail-card">
+          <h2>Relationship Accounts</h2>
+          <ul id="wealthAccountList" class="record-list"></ul>
+        </article>
+
+        <article class="detail-card">
+          <h2>Wealth Planning Notes</h2>
+          <ul id="wealthRecommendationList" class="record-list"></ul>
+        </article>
+      </section>
+    </article>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="api.js"></script>
+  <script src="wealth.js"></script>
+</body>
+</html>

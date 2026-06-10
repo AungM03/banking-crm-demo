@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Employee Account</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="crm-shell">
+    <header class="client-topbar">
+      <div class="topbar-links">
+        <a class="back-link" href="home.html">Home</a>
+        <a class="back-link" href="index.html">Employee lookup</a>
+      </div>
+      <span class="access-pill">Employee Account</span>
+    </header>
+
+    <section id="employeeNotFoundState" class="not-found hidden">
+      <h1>Employee not found</h1>
+      <p>No matching employee account was found.</p>
+      <a class="primary-link" href="index.html">Return to lookup</a>
+    </section>
+
+    <article id="employeeProfile" class="client-profile hidden">
+      <header class="profile-hero">
+        <div>
+          <h1 id="employeeName">Employee Name</h1>
+          <p id="employeeMeta">Employee ID</p>
+        </div>
+        <span class="access-pill" id="employeeStatus">Active</span>
+      </header>
+
+      <section class="details-grid">
+        <article class="detail-card">
+          <div class="section-heading-row">
+            <h2>Employee Details</h2>
+            <button id="editEmployeeButton" class="secondary-button compact-button" type="button">Edit</button>
+          </div>
+          <dl>
+            <div><dt>Employee ID</dt><dd id="employeeId">EMP-0000</dd></div>
+            <div><dt>Email</dt><dd id="employeeEmail">employee@example.com</dd></div>
+            <div><dt>Department</dt><dd id="employeeDepartment">Department</dd></div>
+            <div><dt>Role</dt><dd id="employeeRole">Role</dd></div>
+            <div><dt>Branch</dt><dd id="employeeBranch">Branch</dd></div>
+            <div><dt>Manager</dt><dd id="employeeManager">Manager</dd></div>
+            <div><dt>Hire Date</dt><dd id="employeeHireDate">01/01/2020</dd></div>
+          </dl>
+          <form id="employeeEditForm" class="crm-form compact-edit-form hidden" novalidate>
+            <div class="form-grid">
+              <label>
+                <span>Name</span>
+                <input id="employeeNameField" type="text" maxlength="120">
+                <small class="field-error" data-error-for="employeeName"></small>
+              </label>
+              <label>
+                <span>Email</span>
+                <input id="employeeEmailField" type="email" maxlength="120">
+                <small class="field-error" data-error-for="employeeEmail"></small>
+              </label>
+              <label>
+                <span>Department</span>
+                <input id="employeeDepartmentField" type="text" maxlength="80">
+                <small class="field-error" data-error-for="employeeDepartment"></small>
+              </label>
+              <label>
+                <span>Role</span>
+                <input id="employeeRoleField" type="text" maxlength="80">
+                <small class="field-error" data-error-for="employeeRole"></small>
+              </label>
+              <label>
+                <span>Branch</span>
+                <input id="employeeBranchField" type="text" maxlength="80">
+                <small class="field-error" data-error-for="employeeBranch"></small>
+              </label>
+              <label>
+                <span>Manager</span>
+                <input id="employeeManagerField" type="text" maxlength="80">
+                <small class="field-error" data-error-for="employeeManager"></small>
+              </label>
+              <label>
+                <span>Status</span>
+                <input id="employeeStatusField" type="text" maxlength="60">
+                <small class="field-error" data-error-for="employeeStatus"></small>
+              </label>
+              <label>
+                <span>Training status</span>
+                <input id="employeeTrainingField" type="text" maxlength="120">
+                <small class="field-error" data-error-for="employeeTraining"></small>
+              </label>
+            </div>
+            <label class="full-field">
+              <span>Access level</span>
+              <input id="employeeAccessField" type="text" maxlength="180">
+              <small class="field-error" data-error-for="employeeAccess"></small>
+            </label>
+            <label class="full-field">
+              <span>Disclosures</span>
+              <input id="employeeDisclosuresField" type="text" maxlength="180">
+              <small class="field-error" data-error-for="employeeDisclosures"></small>
+            </label>
+            <div class="form-footer">
+              <p id="employeeEditMessage" class="form-message hidden" role="status"></p>
+              <div class="button-group">
+                <button id="employeeCancelEditButton" class="secondary-button" type="button">Cancel</button>
+                <button id="employeeSaveButton" type="submit">Save employee</button>
+              </div>
+            </div>
+          </form>
+        </article>
+
+        <article class="detail-card">
+          <h2>Access and Readiness</h2>
+          <dl>
+            <div><dt>Access Level</dt><dd id="employeeAccessLevel">Access</dd></div>
+            <div><dt>Training Status</dt><dd id="employeeTrainingStatus">Current</dd></div>
+            <div><dt>Disclosures</dt><dd id="employeeDisclosures">None</dd></div>
+            <div><dt>Linked Business</dt><dd id="employeeLinkedBusiness">None</dd></div>
+          </dl>
+        </article>
+      </section>
+    </article>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="api.js"></script>
+  <script src="employee.js"></script>
+</body>
+</html>

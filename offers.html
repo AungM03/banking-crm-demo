@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offers - CRM</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="offers" data-nav-module="offers">
+  <div class="app-frame">
+    <aside class="side-nav" aria-label="CRM navigation">
+      <a class="side-nav-logo" href="home.html">CRM</a>
+      <nav>
+        <a href="home.html" data-nav-module="home">Home</a>
+        <a href="index.html" data-nav-module="lookup">Search</a>
+        <a href="leads.html" data-nav-module="leads">Leads</a>
+        <a href="offers.html" data-nav-module="offers">Offers</a>
+        <a href="fraud-watch.html" data-nav-module="fraud">Fraud Risk</a>
+        <a href="meetings.html" data-nav-module="meetings">Meetings</a>
+        <a href="pipeline.html" data-nav-module="pipeline">Pipeline</a>
+        <a href="profitability.html" data-nav-module="profitability">Profitability</a>
+        <a href="activity.html" data-nav-module="activity">Activity</a>
+      </nav>
+    </aside>
+    <main class="list-shell">
+      <header class="list-topbar">
+        <div>
+          <p class="eyebrow">Campaigns</p>
+          <h1>Offers and Segments</h1>
+          <p id="offerCountSubtitle">Loading offers</p>
+        </div>
+        <span class="access-pill" id="pageRoleLabel">Role Access</span>
+      </header>
+      <section id="restrictedState" class="not-found hidden">
+        <h1>Restricted Access</h1>
+        <p>This page is restricted for the current role.</p>
+        <a class="primary-link" href="home.html">Return home</a>
+      </section>
+      <section id="offerEditPanel" class="form-card hidden" data-page-content>
+        <div class="form-card-header">
+          <div>
+            <p class="eyebrow">Edit Offer</p>
+            <h2 id="offerEditTitle">Campaign Signal</h2>
+          </div>
+          <span class="access-pill">Marketing, Admin</span>
+        </div>
+        <form id="offerEditForm" class="crm-form" novalidate>
+          <div class="form-grid">
+            <label>
+              <span>Offer title</span>
+              <input id="offerTitleField" name="title" type="text" maxlength="120">
+              <small class="field-error" data-error-for="offerTitle"></small>
+            </label>
+            <label>
+              <span>Offer type</span>
+              <select id="offerTypeField" name="type">
+                <option value="PL">Personal loan</option>
+                <option value="BL">Business loan</option>
+              </select>
+              <small class="field-error" data-error-for="offerType"></small>
+            </label>
+            <label>
+              <span>Audience</span>
+              <input id="offerAudienceField" name="audience" type="text" maxlength="80">
+              <small class="field-error" data-error-for="offerAudience"></small>
+            </label>
+            <label>
+              <span>Priority</span>
+              <select id="offerPriorityField" name="priority">
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+              <small class="field-error" data-error-for="offerPriority"></small>
+            </label>
+            <label>
+              <span>Status</span>
+              <input id="offerStatusField" name="status" type="text" maxlength="80">
+              <small class="field-error" data-error-for="offerStatus"></small>
+            </label>
+          </div>
+          <label class="full-field">
+            <span>Offer notes</span>
+            <textarea id="offerReasonField" name="reason" maxlength="500" rows="3"></textarea>
+            <small class="field-error" data-error-for="offerReason"></small>
+          </label>
+          <div class="form-footer">
+            <p id="offerFormMessage" class="form-message hidden" role="status"></p>
+            <div class="button-group">
+              <button id="offerCancelEditButton" class="secondary-button" type="button">Cancel edit</button>
+              <button id="offerSubmitButton" type="submit">Save offer</button>
+            </div>
+          </div>
+        </form>
+      </section>
+      <section class="filter-bar" data-page-content>
+        <div class="filter-group">
+          <label class="search-control">
+            <span>Search</span>
+            <input id="pageSearchInput" type="search" placeholder="Offer, campaign, or segment">
+          </label>
+          <label class="filter-dropdown">
+            <span>Filter</span>
+            <select id="pageFilterSelect">
+              <option value="all">All offers</option>
+              <option value="PL">Personal loan</option>
+              <option value="BL">Business loan</option>
+              <option value="High">High priority</option>
+              <option value="Medium">Medium priority</option>
+              <option value="Low">Low priority</option>
+            </select>
+          </label>
+          <label class="filter-dropdown">
+            <span>Sort</span>
+            <select id="pageSortSelect">
+              <option value="priority-desc">Priority</option>
+              <option value="title-asc">Title A-Z</option>
+              <option value="status-asc">Status A-Z</option>
+            </select>
+          </label>
+        </div>
+      </section>
+      <section id="offerCardList" class="card-list" data-page-content></section>
+    </main>
+  </div>
+  <script src="data.js"></script>
+  <script src="api.js"></script>
+  <script src="crm-pages.js"></script>
+</body>
+</html>

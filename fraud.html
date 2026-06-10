@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Fraud Matrix</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="crm-shell">
+    <header class="client-topbar">
+      <div class="topbar-links">
+        <a class="back-link" href="home.html">Home</a>
+        <a class="back-link" id="backToClient" href="index.html">Back to client profile</a>
+      </div>
+      <span class="access-pill">Fraud Matrix Details</span>
+    </header>
+
+    <section id="fraudNotFoundState" class="not-found hidden">
+      <h1>Fraud details not found</h1>
+      <p>No matching customer was found for this fraud matrix.</p>
+      <a class="primary-link" href="index.html">Return to search</a>
+    </section>
+
+    <article id="fraudProfile" class="client-profile hidden">
+      <header class="fraud-hero">
+        <div>
+          <p class="eyebrow">Fraud Matrix</p>
+          <h1 id="fraudCustomerName">Customer Name</h1>
+          <p id="fraudCustomerMeta">Account and CIF</p>
+        </div>
+        <div class="fraud-score-panel" id="fraudScorePanel">
+          <span>Score</span>
+          <strong id="fraudDetailScore">0 / 100</strong>
+          <small id="fraudDetailTier">Risk tier</small>
+        </div>
+      </header>
+
+      <section class="fraud-details-grid">
+        <article class="detail-card">
+          <h2>Fraud History Graph</h2>
+          <div id="fraudGraph" class="fraud-graph"></div>
+        </article>
+
+        <article class="detail-card">
+          <h2>Score Drivers</h2>
+          <ul id="fraudDriverList" class="driver-list"></ul>
+        </article>
+
+        <article class="detail-card">
+          <h2>Fraud Summary</h2>
+          <dl>
+            <div>
+              <dt>Fraud Cases</dt>
+              <dd id="fraudCases">0</dd>
+            </div>
+            <div>
+              <dt>Frontline Notes</dt>
+              <dd id="frontlineNotes">0</dd>
+            </div>
+            <div>
+              <dt>Last Reviewed</dt>
+              <dd id="lastReviewed">Today</dd>
+            </div>
+            <div>
+              <dt>Matrix Scale</dt>
+              <dd>0-100</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="detail-card">
+          <h2>Risk Bands</h2>
+          <div class="risk-band-list">
+            <span>0-30 Low</span>
+            <span>31-60 Medium</span>
+            <span>61-80 High</span>
+            <span>81-100 Critical</span>
+          </div>
+        </article>
+      </section>
+    </article>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="api.js"></script>
+  <script src="fraud.js"></script>
+</body>
+</html>

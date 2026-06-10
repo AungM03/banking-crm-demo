@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Home</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-frame">
+    <aside class="side-nav" aria-label="CRM navigation">
+      <a class="side-nav-logo" href="home.html" aria-label="CRM home">CRM</a>
+      <nav>
+        <a class="active" href="home.html" data-nav-module="home"><span>Home</span></a>
+        <a href="index.html" data-nav-module="lookup"><span>Lookup</span></a>
+        <a href="leads.html" data-nav-module="leads"><span>Leads</span></a>
+        <a href="offers.html" data-nav-module="offers"><span>Offers</span></a>
+        <a href="fraud-watch.html" data-nav-module="fraud"><span>Fraud</span></a>
+        <a href="meetings.html" data-nav-module="meetings"><span>Meetings</span></a>
+        <a href="pipeline.html" data-nav-module="pipeline"><span>Pipeline</span></a>
+        <a href="profitability.html" data-nav-module="profitability"><span>Profitability</span></a>
+        <a href="activity.html" data-nav-module="activity"><span>Activity</span></a>
+        <a href="#accessPanel" data-nav-module="roles"><span>Roles</span></a>
+      </nav>
+    </aside>
+
+    <main class="dashboard-shell">
+      <header class="dashboard-topbar">
+        <div>
+          <p class="eyebrow">CRM Home</p>
+          <h1 id="homeGreeting">Welcome</h1>
+          <p id="homeSubtitle">Role-based CRM access view.</p>
+        </div>
+        <div class="dashboard-actions">
+          <label class="search-control" for="globalSearch">
+            <span>Search CRM</span>
+            <input id="globalSearch" type="search" placeholder="Search clients, leads, offers">
+          </label>
+          <label class="role-switcher" for="roleSwitcher">
+            <span>Role</span>
+            <select id="roleSwitcher">
+              <option value="admin">Admin</option>
+              <option value="hr">HR</option>
+              <option value="banker">Banker</option>
+              <option value="wealth">Wealth</option>
+              <option value="fraud">Fraud</option>
+              <option value="loans">Loans</option>
+              <option value="marketing">Marketing</option>
+            </select>
+          </label>
+          <a class="secondary-link" href="login.html">Switch user</a>
+        </div>
+      </header>
+
+      <section class="snapshot-grid" id="snapshotGrid" aria-label="Quick snapshot"></section>
+
+      <section class="dashboard-grid" aria-label="CRM action panels">
+        <article class="dashboard-card wide-card" id="opportunitiesPanel" data-module="opportunities">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Growth</p>
+              <h2>Leads and Offers</h2>
+            </div>
+            <span class="access-pill" id="visibleLeadCount">0 visible</span>
+          </div>
+          <div id="leadOfferList" class="opportunity-list"></div>
+        </article>
+
+        <article class="dashboard-card" id="fraudPanel" data-module="fraud">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Protection</p>
+              <h2>Fraud Risk</h2>
+            </div>
+          </div>
+          <div id="fraudWatchList" class="watch-list"></div>
+        </article>
+
+        <article class="dashboard-card" id="meetingsPanel" data-module="meetings">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Engagement</p>
+              <h2>Meetings</h2>
+            </div>
+          </div>
+          <div id="meetingList" class="meeting-list"></div>
+        </article>
+
+        <article class="dashboard-card" id="accessPanel" data-module="access">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Role Access</p>
+              <h2 id="activeRoleName">Current Role</h2>
+            </div>
+          </div>
+          <div class="role-summary">
+            <strong id="activeUserName">User Name</strong>
+            <span id="activeRoleDepartment">Department</span>
+            <p id="activeRoleFocus">Role focus.</p>
+          </div>
+          <ul id="permissionList" class="permission-list"></ul>
+        </article>
+
+        <article class="dashboard-card wide-card" data-module="pipeline">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Relationship Tracking</p>
+              <h2 id="pipelineTitle">Client Pipeline</h2>
+            </div>
+            <a class="secondary-link" href="pipeline.html">Open pipeline</a>
+          </div>
+          <div id="clientPipeline" class="pipeline-list"></div>
+        </article>
+
+        <article class="dashboard-card wide-card" data-module="insights">
+          <div class="card-header">
+            <div>
+              <p class="eyebrow">Insights</p>
+              <h2 id="insightTitle">Profitability by Account</h2>
+            </div>
+            <a class="secondary-link" href="profitability.html">Open report</a>
+          </div>
+          <div id="profitabilityList" class="profitability-list"></div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="api.js"></script>
+  <script src="home.js"></script>
+</body>
+</html>

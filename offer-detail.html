@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offer Detail - CRM</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="offerDetail">
+  <main class="crm-shell">
+    <header class="detail-topbar">
+      <div class="topbar-links">
+        <a class="back-link" href="home.html">Home</a>
+        <a class="back-link" href="offers.html">Offers</a>
+      </div>
+      <span class="access-pill" id="pageRoleLabel">Offer Detail</span>
+    </header>
+    <section id="restrictedState" class="not-found hidden">
+      <h1>Offer not found</h1>
+      <p>This offer is restricted for the current role.</p>
+      <a class="primary-link" href="offers.html">Return to offers</a>
+    </section>
+    <article class="client-profile" data-page-content>
+      <header class="profile-hero">
+        <div>
+          <p class="eyebrow">Campaign Offer</p>
+          <h1 id="offerTitle">Offer</h1>
+          <p id="offerReason">Offer reason</p>
+        </div>
+      </header>
+      <section class="summary-grid">
+        <article class="summary-card"><span>Audience</span><strong id="offerAudience">-</strong></article>
+        <article class="summary-card"><span>Priority</span><strong id="offerPriority">-</strong></article>
+        <article class="summary-card"><span>Status</span><strong id="offerStatus">-</strong></article>
+        <article class="summary-card"><span>Access</span><strong id="offerAccess">Role filtered</strong></article>
+      </section>
+      <section class="details-grid">
+        <article class="detail-card wide-card"><h2>Segment Context</h2><ul id="offerSegments" class="record-list"></ul></article>
+      </section>
+    </article>
+  </main>
+  <script src="data.js"></script>
+  <script src="api.js"></script>
+  <script src="crm-pages.js"></script>
+</body>
+</html>

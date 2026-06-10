@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Client Lookup</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="crm-shell lookup-screen">
+    <nav class="lookup-nav" aria-label="Prototype navigation">
+      <a href="home.html">Home dashboard</a>
+      <a href="login.html">Switch role</a>
+    </nav>
+
+    <header class="page-header centered">
+      <p class="eyebrow" id="lookupEyebrow">CRM Client Lookup</p>
+      <h1 id="lookupTitle">How would you like to search?</h1>
+      <p class="home-intro" id="lookupNote">Choose one lookup method.</p>
+    </header>
+
+    <section class="not-found hidden" id="lookupAccessNotice">
+      <h1>Lookup restricted</h1>
+      <p id="lookupAccessMessage">This role does not have access to individual record lookup.</p>
+      <a class="primary-link" href="home.html">Return to CRM home</a>
+    </section>
+
+    <section class="search-methods" id="searchMethods" aria-label="CRM lookup methods">
+      <button class="search-card hidden" type="button" data-method-index="0">
+        <span>01</span>
+        <strong>Account Number</strong>
+      </button>
+
+      <button class="search-card hidden" type="button" data-method-index="1">
+        <span>02</span>
+        <strong>Name</strong>
+      </button>
+
+      <button class="search-card hidden" type="button" data-method-index="2">
+        <span>03</span>
+        <strong>SSN</strong>
+      </button>
+
+      <button class="search-card hidden" type="button" data-method-index="3">
+        <span>04</span>
+        <strong>Customer ID (CIF)</strong>
+      </button>
+    </section>
+
+    <section class="lookup-panel hidden" id="lookupPanel" aria-label="Lookup form">
+      <div>
+        <p class="eyebrow" id="activeMethodLabel">Account Number Search</p>
+        <h2 id="formTitle">Enter account number</h2>
+      </div>
+
+      <form id="searchForm" class="search-form">
+        <label for="searchInput" id="inputLabel">Account number</label>
+        <div class="form-row">
+          <input id="searchInput" name="searchInput" type="text" autocomplete="off">
+          <button id="searchButton" type="submit">Search</button>
+        </div>
+        <p class="hint" id="inputHint">Try test account number 10024588.</p>
+        <p class="form-error hidden" id="formError"></p>
+      </form>
+    </section>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="api.js"></script>
+  <script src="lookup.js"></script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Client Profile</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="crm-shell">
+    <header class="client-topbar">
+      <div class="topbar-links">
+        <a class="back-link" href="home.html">Home</a>
+        <a class="back-link" href="index.html">Client lookup</a>
+      </div>
+      <span class="access-pill">CRM Client 360</span>
+    </header>
+
+    <section id="notFoundState" class="not-found hidden">
+      <h1>Client not found</h1>
+      <p id="notFoundMessage">No matching customer was found.</p>
+      <a class="primary-link" href="index.html">Return to search</a>
+    </section>
+
+    <article id="clientProfile" class="client-profile hidden">
+      <header class="profile-hero">
+        <div>
+          <h1 id="customerName">Customer Name</h1>
+          <p id="customerMeta">Account and CIF</p>
+        </div>
+        <div class="profile-actions">
+          <a class="profile-action-card discover-card" id="discoverNeedsLink" href="discover.html">
+            <span>Discover Needs</span>
+            <strong>Product Fit</strong>
+            <small id="discoverNeedsCount">0 recommendations</small>
+          </a>
+          <a class="profile-action-card fraud-matrix-card" id="fraudMatrixLink" href="fraud.html">
+            <span>Fraud Matrix</span>
+            <strong id="fraudScore">0 / 100</strong>
+            <small id="fraudTier">Risk tier</small>
+          </a>
+        </div>
+      </header>
+
+      <section class="summary-grid" aria-label="Client balance summary">
+        <article class="summary-card">
+          <span>Total Relationship</span>
+          <strong id="householdBalance">$0</strong>
+        </article>
+        <article class="summary-card">
+          <span>Checking</span>
+          <strong id="checkingBalance">$0</strong>
+        </article>
+        <article class="summary-card">
+          <span>Savings</span>
+          <strong id="savingsBalance">$0</strong>
+        </article>
+        <article class="summary-card">
+          <span>Total Loan Balance</span>
+          <strong id="totalLoans">$0</strong>
+        </article>
+        <article class="summary-card affluency-card">
+          <span>Affluency</span>
+          <div class="affluency-row" aria-label="Affluency tier">
+            <i class="affluency-dot" data-tier-dot="1"></i>
+            <i class="affluency-dot" data-tier-dot="2"></i>
+            <i class="affluency-dot" data-tier-dot="3"></i>
+          </div>
+          <strong id="investedBalance">$0</strong>
+          <small id="affluencyTier">Tier 1</small>
+        </article>
+        <article class="summary-card profitability-card">
+          <span>Profitability</span>
+          <strong id="profitabilityTier">Medium</strong>
+          <small id="annualContribution">$0 annual contribution</small>
+        </article>
+      </section>
+
+      <section class="service-grid" aria-label="Service workflow">
+        <article class="detail-card">
+          <h2>Alerts</h2>
+          <ul id="alertList" class="alert-list"></ul>
+        </article>
+
+        <article class="detail-card">
+          <h2>Bank Notes</h2>
+          <div id="noteList" class="note-list"></div>
+          <form id="noteForm" class="note-form">
+            <label for="noteText">Add bank note</label>
+            <div class="note-entry-row">
+              <input id="noteText" type="text" maxlength="500" placeholder="Add a bank note">
+              <button id="noteCancelEditButton" class="secondary-button hidden" type="button">Cancel</button>
+              <button type="submit">Add</button>
+            </div>
+            <p id="noteMessage" class="form-message hidden" role="status"></p>
+          </form>
+        </article>
+      </section>
+
+      <section class="details-grid">
+        <article class="detail-card">
+          <div class="section-heading-row">
+            <h2>Client Details</h2>
+            <button id="editCustomerButton" class="secondary-button compact-button" type="button">Edit</button>
+          </div>
+          <dl>
+            <div>
+              <dt>Account Number</dt>
+              <dd id="accountNumber">00000000</dd>
+            </div>
+            <div>
+              <dt>Primary Account Opened</dt>
+              <dd id="accountOpened">01/01/2000</dd>
+            </div>
+            <div>
+              <dt>Customer ID (CIF)</dt>
+              <dd id="cif">CIF-0000000</dd>
+            </div>
+            <div>
+              <dt>SSN</dt>
+              <dd id="ssn">***-**-0000</dd>
+            </div>
+            <div>
+              <dt>Date of Birth</dt>
+              <dd id="dob">01/01/1980</dd>
+            </div>
+            <div>
+              <dt>ZIP</dt>
+              <dd id="zip">00000</dd>
+            </div>
+            <div>
+              <dt>Address</dt>
+              <dd id="address">Street Address</dd>
+            </div>
+            <div>
+              <dt>Phone</dt>
+              <dd id="phone">000-000-0000</dd>
+            </div>
+            <div>
+              <dt>Email</dt>
+              <dd id="email">client@example.com</dd>
+            </div>
+            <div>
+              <dt>Personal Banker</dt>
+              <dd id="personalBanker">Banker Name</dd>
+            </div>
+            <div>
+              <dt>Wealth Advisor</dt>
+              <dd id="wealthAdvisor">Not assigned</dd>
+            </div>
+          </dl>
+          <form id="customerEditForm" class="crm-form compact-edit-form hidden" novalidate>
+            <div class="form-grid">
+              <label>
+                <span>ZIP</span>
+                <input id="customerZipField" type="text" maxlength="10">
+                <small class="field-error" data-error-for="customerZip"></small>
+              </label>
+              <label>
+                <span>Phone</span>
+                <input id="customerPhoneField" type="text" maxlength="24">
+                <small class="field-error" data-error-for="customerPhone"></small>
+              </label>
+              <label>
+                <span>Email</span>
+                <input id="customerEmailField" type="email" maxlength="120">
+                <small class="field-error" data-error-for="customerEmail"></small>
+              </label>
+              <label>
+                <span>Primary branch</span>
+                <input id="customerBranchField" type="text" maxlength="80">
+                <small class="field-error" data-error-for="customerBranch"></small>
+              </label>
+              <label>
+                <span>Personal banker</span>
+                <input id="customerBankerField" type="text" maxlength="80">
+                <small class="field-error" data-error-for="customerBanker"></small>
+              </label>
+              <label>
+                <span>Wealth advisor</span>
+                <input id="customerWealthField" type="text" maxlength="80">
+                <small class="field-error" data-error-for="customerWealth"></small>
+              </label>
+            </div>
+            <label class="full-field">
+              <span>Address</span>
+              <input id="customerAddressField" type="text" maxlength="140">
+              <small class="field-error" data-error-for="customerAddress"></small>
+            </label>
+            <div class="form-footer">
+              <p id="customerEditMessage" class="form-message hidden" role="status"></p>
+              <div class="button-group">
+                <button id="customerCancelEditButton" class="secondary-button" type="button">Cancel</button>
+                <button id="customerSaveButton" type="submit">Save customer</button>
+              </div>
+            </div>
+          </form>
+        </article>
+
+        <article class="detail-card">
+          <h2>Account Details</h2>
+          <ul id="accountList" class="record-list"></ul>
+        </article>
+
+        <article class="detail-card">
+          <h2>Household View</h2>
+          <ul id="householdList" class="record-list"></ul>
+        </article>
+
+        <article class="detail-card">
+          <h2>Loans</h2>
+          <ul id="loanList" class="record-list"></ul>
+        </article>
+
+        <article class="detail-card">
+          <h2>Business Accounts</h2>
+          <ul id="businessList" class="record-list"></ul>
+        </article>
+
+        <article class="detail-card">
+          <h2>Relationship Profitability</h2>
+          <dl>
+            <div>
+              <dt>Profitability Tier</dt>
+              <dd id="profitabilityDetailTier">Medium</dd>
+            </div>
+            <div>
+              <dt>Annual Contribution</dt>
+              <dd id="profitabilityAnnual">$0</dd>
+            </div>
+            <div>
+              <dt>Main Value Driver</dt>
+              <dd id="profitabilityDriver">Deposits</dd>
+            </div>
+            <div>
+              <dt>Watch Item</dt>
+              <dd id="profitabilityWatchItem">None</dd>
+            </div>
+          </dl>
+        </article>
+      </section>
+    </article>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="api.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>

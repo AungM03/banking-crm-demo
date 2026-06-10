@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meeting Detail - CRM</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="meetingDetail">
+  <main class="crm-shell">
+    <header class="detail-topbar">
+      <div class="topbar-links">
+        <a class="back-link" href="home.html">Home</a>
+        <a class="back-link" href="meetings.html">Meetings</a>
+      </div>
+      <span class="access-pill" id="pageRoleLabel">Meeting Detail</span>
+    </header>
+    <section id="restrictedState" class="not-found hidden">
+      <h1>Meeting not found</h1>
+      <p>This meeting is restricted for the current role.</p>
+      <a class="primary-link" href="meetings.html">Return to meetings</a>
+    </section>
+    <article class="client-profile" data-page-content>
+      <header class="profile-hero">
+        <div>
+          <p class="eyebrow">Engagement</p>
+          <h1 id="meetingTitle">Meeting</h1>
+          <p id="meetingClient">Client</p>
+        </div>
+      </header>
+      <section class="summary-grid">
+        <article class="summary-card"><span>Date</span><strong id="meetingDate">-</strong></article>
+        <article class="summary-card"><span>Owner</span><strong id="meetingOwner">-</strong></article>
+        <article class="summary-card"><span>RSVP</span><strong>Pending</strong></article>
+        <article class="summary-card"><span>Type</span><strong>Client Review</strong></article>
+      </section>
+      <section class="details-grid">
+        <article class="detail-card wide-card"><h2>Agenda</h2><p id="meetingAgenda">Meeting agenda.</p><a id="meetingClientLink" class="primary-link hidden" href="client.html">Open linked customer</a></article>
+      </section>
+    </article>
+  </main>
+  <script src="data.js"></script>
+  <script src="api.js"></script>
+  <script src="crm-pages.js"></script>
+</body>
+</html>

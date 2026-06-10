@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Discover Needs</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="crm-shell">
+    <header class="client-topbar">
+      <div class="topbar-links">
+        <a class="back-link" href="home.html">Home</a>
+        <a class="back-link" id="backToClient" href="index.html">Back to client profile</a>
+      </div>
+      <span class="access-pill">Discover Needs</span>
+    </header>
+
+    <section id="discoverNotFoundState" class="not-found hidden">
+      <h1>Discover needs not found</h1>
+      <p>No matching customer was found.</p>
+      <a class="primary-link" href="index.html">Return to search</a>
+    </section>
+
+    <article id="discoverProfile" class="client-profile hidden">
+      <header class="discover-hero">
+        <div>
+          <p class="eyebrow">Discover Needs</p>
+          <h1 id="discoverCustomerName">Customer Name</h1>
+          <p id="discoverCustomerMeta">Account and CIF</p>
+        </div>
+        <div class="need-count-panel">
+          <span>Recommendations</span>
+          <strong id="recommendationCount">0</strong>
+          <small>Product fit opportunities</small>
+        </div>
+      </header>
+
+      <section class="needs-summary-grid" aria-label="Discover needs summary">
+        <article class="summary-card">
+          <span>Total Relationship</span>
+          <strong id="discoverHouseholdBalance">$0</strong>
+        </article>
+        <article class="summary-card">
+          <span>Invested With Bank</span>
+          <strong id="discoverInvestedBalance">$0</strong>
+        </article>
+        <article class="summary-card">
+          <span>Affluency Tier</span>
+          <strong id="discoverAffluencyTier">1 of 3</strong>
+        </article>
+        <article class="summary-card">
+          <span>Personal Banker</span>
+          <strong id="discoverPersonalBanker">Banker Name</strong>
+        </article>
+      </section>
+
+      <section class="discover-grid">
+        <article class="detail-card next-best-card">
+          <h2>Next Best Action</h2>
+          <span id="discoverActionPriority" class="priority-pill">Priority</span>
+          <h3 id="discoverActionTitle">Action title</h3>
+          <p id="discoverActionReason">Action reason</p>
+          <dl class="mini-dl">
+            <div>
+              <dt>Banker</dt>
+              <dd id="discoverActionBanker">Banker</dd>
+            </div>
+            <div>
+              <dt>Due</dt>
+              <dd id="discoverActionDue">Today</dd>
+            </div>
+          </dl>
+        </article>
+
+        <article class="detail-card">
+          <h2>Conversation Prompts</h2>
+          <ul class="driver-list">
+            <li>Confirm what the client is trying to accomplish financially.</li>
+            <li>Review current products before offering anything new.</li>
+            <li>Match the recommendation to a specific need, balance, or life event.</li>
+            <li>Document the outcome for the next banker or advisor.</li>
+          </ul>
+        </article>
+
+        <article class="detail-card recommendations-card">
+          <h2>Recommended Products</h2>
+          <div id="recommendationList" class="recommendation-list"></div>
+        </article>
+      </section>
+    </article>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="api.js"></script>
+  <script src="discover.js"></script>
+</body>
+</html>

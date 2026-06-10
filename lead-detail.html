@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lead Detail - CRM</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="leadDetail">
+  <main class="crm-shell">
+    <header class="detail-topbar">
+      <div class="topbar-links">
+        <a class="back-link" href="home.html">Home</a>
+        <a class="back-link" href="leads.html">Leads</a>
+      </div>
+      <span class="access-pill" id="pageRoleLabel">Lead Detail</span>
+    </header>
+    <section id="restrictedState" class="not-found hidden">
+      <h1>Lead not found</h1>
+      <p>This lead is restricted for the current role.</p>
+      <a class="primary-link" href="leads.html">Return to leads</a>
+    </section>
+    <article class="client-profile" data-page-content>
+      <header class="profile-hero">
+        <div>
+          <p class="eyebrow">Lead Detail</p>
+          <h1 id="leadCompanyName">Lead</h1>
+          <p id="leadContactInfo">Contact details</p>
+        </div>
+        <div class="profile-actions">
+          <a class="profile-action-card" href="pipeline.html"><span>Pipeline</span><strong id="leadStatus">Status</strong><small>Current stage</small></a>
+        </div>
+      </header>
+      <section class="summary-grid">
+        <article class="summary-card"><span>Opportunity Amount</span><strong id="leadAmount">$0</strong></article>
+        <article class="summary-card"><span>Close Probability</span><strong id="leadProbability">0%</strong></article>
+        <article class="summary-card"><span>Expected Close</span><strong id="leadCloseDate">TBD</strong></article>
+        <article class="summary-card"><span>Assigned To</span><strong id="leadAssignedTo">Unassigned</strong></article>
+      </section>
+      <section class="details-grid">
+        <article class="detail-card"><h2>Lead Information</h2><dl><div><dt>Type</dt><dd id="detailLeadType">-</dd></div><div><dt>Reason</dt><dd id="detailLeadReason">-</dd></div><div><dt>Linked Customer</dt><dd id="detailLinkedCustomer">-</dd></div></dl></article>
+        <article class="detail-card"><h2>Next Steps</h2><p>Review fit, confirm eligibility, and coordinate follow-up with the assigned banker or lending team.</p><a id="viewCustomerLink" class="primary-link hidden" href="client.html">Open linked customer</a></article>
+      </section>
+    </article>
+  </main>
+  <script src="data.js"></script>
+  <script src="api.js"></script>
+  <script src="crm-pages.js"></script>
+</body>
+</html>
