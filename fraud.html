@@ -30,13 +30,46 @@
           <p id="fraudCustomerMeta">Account and CIF</p>
         </div>
         <div class="fraud-score-panel" id="fraudScorePanel">
-          <span>Score</span>
+          <span>Fraud Matrix Score</span>
           <strong id="fraudDetailScore">0 / 100</strong>
           <small id="fraudDetailTier">Risk tier</small>
         </div>
       </header>
 
       <section class="fraud-details-grid">
+        <article class="detail-card fraud-ai-card">
+          <div class="section-heading-row">
+            <h2>Fraud Note Rule Engine</h2>
+            <span id="fraudAiLift" class="status-badge">0 note impact</span>
+          </div>
+          <p class="card-help">The score above recalculates from active Fraud Notes only. Add a note with suspicious language to raise the score; remove the note to reduce it.</p>
+          <div class="rule-engine-summary">
+            <span>Top Scam Category</span>
+            <strong id="fraudTopCategory">No match</strong>
+          </div>
+          <ul id="fraudAiInsightList" class="ai-insight-list"></ul>
+          <div class="next-action fraud-ai-action">
+            <span>Recommended action</span>
+            <strong id="fraudAiAction">Continue standard monitoring.</strong>
+          </div>
+        </article>
+
+        <article class="detail-card fraud-notes-card">
+          <div class="section-heading-row">
+            <h2>Fraud Notes</h2>
+            <span id="fraudNoteCount" class="status-badge">0 active</span>
+          </div>
+          <div id="fraudNoteList" class="note-list fraud-note-list"></div>
+          <form id="fraudNoteForm" class="note-form">
+            <label for="fraudNoteText">Add fraud observation</label>
+            <div class="note-entry-row">
+              <textarea id="fraudNoteText" rows="3" maxlength="500" placeholder="Example: Customer says someone claiming to be from the bank told them to move money to a safe account."></textarea>
+              <button class="primary-button" type="submit">Add</button>
+            </div>
+            <p id="fraudNoteMessage" class="form-message hidden"></p>
+          </form>
+        </article>
+
         <article class="detail-card">
           <h2>Fraud History Graph</h2>
           <div id="fraudGraph" class="fraud-graph"></div>
@@ -84,6 +117,7 @@
 
   <script src="data.js"></script>
   <script src="api.js"></script>
+  <script src="fraud-rules.js"></script>
   <script src="fraud.js"></script>
 </body>
 </html>

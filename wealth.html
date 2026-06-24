@@ -35,6 +35,11 @@
             <strong>Full View</strong>
             <small>Account relationship</small>
           </a>
+          <a class="profile-action-card discover-card" id="wealthLendingLink" href="lending.html">
+            <span>Lending</span>
+            <strong>Loan View</strong>
+            <small>When available</small>
+          </a>
           <section class="profile-action-card fraud-matrix-card score-only" aria-label="Fraud score summary">
             <span>Fraud Score</span>
             <strong id="wealthFraudScore">0 / 100</strong>
@@ -60,12 +65,131 @@
           <span>Wealth Advisor</span>
           <strong id="wealthAdvisorName">Advisor</strong>
         </article>
+        <article class="summary-card">
+          <span>Next Meeting</span>
+          <strong id="wealthNextMeeting">--</strong>
+        </article>
+        <article class="summary-card">
+          <span>Follow-Up</span>
+          <strong id="wealthFollowUpSummary">Open</strong>
+        </article>
+      </section>
+
+      <section class="service-grid" aria-label="Wealth workflow">
+        <article class="detail-card">
+          <h2>Life Event Alerts</h2>
+          <ul id="wealthEventList" class="record-list"></ul>
+        </article>
+
+        <article class="detail-card">
+          <div class="section-heading-row">
+            <h2>Meeting and Call Notes</h2>
+            <button id="wealthInteractionCancelButton" class="secondary-button compact-button hidden" type="button">Cancel Edit</button>
+          </div>
+          <div id="wealthInteractionList" class="note-list"></div>
+          <form id="wealthInteractionForm" class="crm-form compact-edit-form">
+            <div class="form-grid three-column-grid">
+              <label>
+                <span>Type</span>
+                <select id="wealthInteractionType">
+                  <option>Meeting</option>
+                  <option>Call</option>
+                  <option>Follow-up</option>
+                  <option>Life event</option>
+                </select>
+              </label>
+              <label>
+                <span>Date</span>
+                <input id="wealthInteractionDate" type="text" placeholder="06/30/2026">
+              </label>
+              <label>
+                <span>Note</span>
+                <input id="wealthInteractionNote" type="text" maxlength="500" placeholder="Document the meeting or call">
+              </label>
+            </div>
+            <div class="form-footer">
+              <p id="wealthInteractionMessage" class="form-message hidden" role="status"></p>
+              <button id="wealthInteractionSaveButton" type="submit">Add note</button>
+            </div>
+          </form>
+        </article>
       </section>
 
       <section class="details-grid">
         <article class="detail-card">
-          <h2>Investment Portfolio</h2>
-          <ul id="portfolioList" class="record-list"></ul>
+          <div class="section-heading-row">
+            <h2>Investment Profile</h2>
+            <button id="wealthEditButton" class="secondary-button compact-button" type="button">Edit</button>
+          </div>
+          <dl id="wealthProfileDetails"></dl>
+          <form id="wealthEditForm" class="crm-form compact-edit-form hidden">
+            <div class="form-grid">
+              <label>
+                <span>Risk tolerance</span>
+                <input id="wealthRiskField" type="text" maxlength="80">
+              </label>
+              <label>
+                <span>Time horizon</span>
+                <input id="wealthHorizonField" type="text" maxlength="80">
+              </label>
+              <label>
+                <span>Liquidity needs</span>
+                <input id="wealthLiquidityField" type="text" maxlength="240">
+              </label>
+              <label>
+                <span>Tax status</span>
+                <input id="wealthTaxField" type="text" maxlength="160">
+              </label>
+              <label>
+                <span>Other investments</span>
+                <input id="wealthOtherInvestmentsField" type="text" maxlength="220">
+              </label>
+              <label>
+                <span>Investment experience</span>
+                <input id="wealthExperienceField" type="text" maxlength="80">
+              </label>
+              <label>
+                <span>Investment objectives</span>
+                <input id="wealthObjectivesField" type="text" maxlength="240">
+              </label>
+              <label>
+                <span>Concentration concerns</span>
+                <input id="wealthConcentrationField" type="text" maxlength="220">
+              </label>
+              <label>
+                <span>Income needs</span>
+                <input id="wealthIncomeNeedsField" type="text" maxlength="180">
+              </label>
+              <label>
+                <span>Last meeting</span>
+                <input id="wealthLastMeetingField" type="text" maxlength="24">
+              </label>
+              <label>
+                <span>Last call</span>
+                <input id="wealthLastCallField" type="text" maxlength="24">
+              </label>
+              <label>
+                <span>Next meeting</span>
+                <input id="wealthNextMeetingField" type="text" maxlength="24">
+              </label>
+            </div>
+            <label class="full-field">
+              <span>Follow-up</span>
+              <input id="wealthFollowUpField" type="text" maxlength="240">
+            </label>
+            <div class="form-footer">
+              <p id="wealthEditMessage" class="form-message hidden" role="status"></p>
+              <div class="button-group">
+                <button id="wealthCancelEditButton" class="secondary-button" type="button">Cancel</button>
+                <button id="wealthSaveButton" type="submit">Save profile</button>
+              </div>
+            </div>
+          </form>
+        </article>
+
+        <article class="detail-card">
+          <h2>Retail, SIS, and STAR Accounts</h2>
+          <ul id="wealthAccountList" class="record-list"></ul>
         </article>
 
         <article class="detail-card">
@@ -74,12 +198,7 @@
         </article>
 
         <article class="detail-card">
-          <h2>Relationship Accounts</h2>
-          <ul id="wealthAccountList" class="record-list"></ul>
-        </article>
-
-        <article class="detail-card">
-          <h2>Wealth Planning Notes</h2>
+          <h2>Wealth Planning Opportunities</h2>
           <ul id="wealthRecommendationList" class="record-list"></ul>
         </article>
       </section>

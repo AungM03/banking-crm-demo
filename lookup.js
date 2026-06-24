@@ -96,15 +96,19 @@ function setSearchMethod(index) {
 
 function getResultUrl(record, value) {
   if (activeMethod.target === "employee") {
-    return `employee.html?employeeId=${encodeURIComponent(record.employeeId)}`;
+    return window.crmUrlWithRole(`employee.html?employeeId=${encodeURIComponent(record.employeeId)}`);
   }
 
   if (activeMethod.target === "business") {
-    return `business.html?businessId=${encodeURIComponent(record.businessId)}`;
+    return window.crmUrlWithRole(`business.html?businessId=${encodeURIComponent(record.businessId)}`);
   }
 
   if (activeMethod.target === "wealth") {
-    return `wealth.html?accountNumber=${encodeURIComponent(record.accountNumber)}`;
+    return window.crmUrlWithRole(`wealth.html?accountNumber=${encodeURIComponent(record.accountNumber)}`);
+  }
+
+  if (activeMethod.target === "loanCustomer") {
+    return window.crmUrlWithRole(`lending.html?accountNumber=${encodeURIComponent(record.accountNumber)}`);
   }
 
   if (activeMethod.target === "segment" || activeMethod.target === "offer") {
@@ -112,7 +116,7 @@ function getResultUrl(record, value) {
   }
 
   if (activeMethod.target === "fraud") {
-    return `fraud.html?accountNumber=${encodeURIComponent(record.accountNumber)}`;
+    return window.crmUrlWithRole(`fraud.html?accountNumber=${encodeURIComponent(record.accountNumber)}`);
   }
 
   const params = new URLSearchParams({
@@ -120,7 +124,7 @@ function getResultUrl(record, value) {
     value
   });
 
-  return `client.html?${params.toString()}`;
+  return window.crmUrlWithRole(`client.html?${params.toString()}`);
 }
 
 function getRecordLabel() {

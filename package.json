@@ -1,0 +1,14 @@
+{
+  "name": "crm-prototype",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Community Bank CRM prototype (SQLite-backed Node server, no external dependencies).",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "reset-db": "node server.mjs --reset-db"
+  }
+}

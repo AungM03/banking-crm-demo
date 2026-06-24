@@ -1,8 +1,7 @@
 const roleSwitcher = document.querySelector("#roleSwitcher");
 const globalSearch = document.querySelector("#globalSearch");
 const params = new URLSearchParams(window.location.search);
-const activeUser = window.crmGetActiveUser();
-let activeRole = window.crmNormalizeRole(params.get("role") || (activeUser && activeUser.role) || window.crmGetActiveRole());
+let activeRole = window.crmNormalizeRole(params.get("role") || window.crmGetActiveRole() || "admin");
 let activeSearch = "";
 
 const roleViews = {
@@ -50,17 +49,14 @@ const roleViews = {
   }
 };
 
-if (activeUser && activeUser.role) {
-  activeRole = window.crmNormalizeRole(activeUser.role);
-  roleSwitcher.disabled = true;
-}
-
 window.crmSetActiveRole(activeRole);
 roleSwitcher.value = activeRole;
 
-roleSwitcher.addEventListener("change", () => {
+roleSwitcher.addEventListener("change", async () => {
   activeRole = window.crmNormalizeRole(roleSwitcher.value);
   window.crmSetActiveRole(activeRole);
+  window.history.replaceState(null, "", `home.html?role=${encodeURIComponent(activeRole)}`);
+  await window.crmApi.loadBootstrap();
   renderHomeDashboard();
 });
 
@@ -79,7 +75,6 @@ async function initHomeDashboard() {
     activeRole = window.crmNormalizeRole(sessionUser.role);
     window.crmSetActiveRole(activeRole);
     roleSwitcher.value = activeRole;
-    roleSwitcher.disabled = true;
   }
 
   renderHomeDashboard();
@@ -88,9 +83,9 @@ async function initHomeDashboard() {
 function renderHomeDashboard() {
   const profile = window.crmRoleProfiles[activeRole];
 
-  setText("#homeGreeting", `Welcome, ${profile.firstName}`);
+  setText("#homeGreeting", `Welcome, ${profile.label}`);
   setText("#homeSubtitle", profile.dashboardFocus);
-  setText("#activeUserName", profile.name);
+  setText("#activeUserName", `${profile.label} View`);
   setText("#activeRoleName", `${profile.label} Access`);
   setText("#activeRoleDepartment", profile.department);
   setText("#activeRoleFocus", profile.primaryPurpose);
@@ -104,6 +99,10 @@ function renderHomeDashboard() {
   renderMeetings();
   renderPipeline();
   renderInsights();
+
+  if (window.crmApplyRoleToLinks) {
+    window.crmApplyRoleToLinks();
+  }
 }
 
 function applyRoleVisibility() {
@@ -237,9 +236,9 @@ function getSnapshotMetric(metricKey) {
       help: "Business relationship group"
     },
     roleCount: {
-      label: "Test Users",
+      label: "Test Roles",
       value: Object.keys(window.crmRoleProfiles).length,
-      help: "Active fake accounts"
+      help: "Active role views"
     },
     hrTasks: {
       label: "Training Items",
@@ -322,7 +321,7 @@ function renderFraudWatch() {
     item.className = `watch-item risk-${customer.fraudRiskTier.toLowerCase()}`;
 
     if (canOpenFraudDetails(activeRole)) {
-      item.href = `fraud.html?accountNumber=${encodeURIComponent(customer.accountNumber)}`;
+      item.href = window.crmUrlWithRole(`fraud.html?accountNumber=${encodeURIComponent(customer.accountNumber)}`, activeRole);
     }
 
     item.innerHTML = `
@@ -390,7 +389,7 @@ function renderPipeline() {
   if (activeRole === "wealth") {
     setText("#pipelineTitle", "Wealth Portfolio");
     getWealthCustomers().filter(matchesSearch).forEach((customer) => {
-      clientPipeline.appendChild(createRecord(customer.name, `${customer.wealthAdvisor} | Affluency tier ${customer.affluencyTier}`, window.crmFormatCurrency(customer.investedBalance), `wealth.html?accountNumber=${encodeURIComponent(customer.accountNumber)}`));
+      clientPipeline.appendChild(createRecord(customer.name, `${customer.wealthAdvisor} | Affluency tier ${customer.affluencyTier}`, window.crmFormatCurrency(customer.investedBalance), window.crmUrlWithRole(`wealth.html?accountNumber=${encodeURIComponent(customer.accountNumber)}`, activeRole)));
     });
     return;
   }
@@ -409,7 +408,7 @@ function renderPipeline() {
       ? `${customer.fraudRiskTier} risk | ${customer.fraudCases} cases | ${customer.frontlineNotes} notes`
       : `${customer.personalBanker} | ${customer.primaryBranch}`;
     const href = activeRole === "fraud"
-      ? `fraud.html?accountNumber=${encodeURIComponent(customer.accountNumber)}`
+      ? window.crmUrlWithRole(`fraud.html?accountNumber=${encodeURIComponent(customer.accountNumber)}`, activeRole)
       : window.crmClientUrl(customer.accountNumber);
 
     clientPipeline.appendChild(createRecord(customer.name, detail, meta, href));
@@ -451,7 +450,7 @@ function renderInsights() {
   if (activeRole === "wealth") {
     setText("#insightTitle", "Investment Portfolio Signals");
     getWealthCustomers().filter(matchesSearch).forEach((customer) => {
-      profitabilityList.appendChild(createRecord(customer.name, `${customer.profitability.tier} profitability | ${customer.profitability.mainDriver}`, window.crmFormatCurrency(customer.investedBalance), `wealth.html?accountNumber=${encodeURIComponent(customer.accountNumber)}`));
+      profitabilityList.appendChild(createRecord(customer.name, `${customer.profitability.tier} profitability | ${customer.profitability.mainDriver}`, window.crmFormatCurrency(customer.investedBalance), window.crmUrlWithRole(`wealth.html?accountNumber=${encodeURIComponent(customer.accountNumber)}`, activeRole)));
     });
     return;
   }
@@ -496,7 +495,7 @@ function createRecord(title, detail, meta, href) {
   const item = document.createElement(href ? "a" : "section");
   item.className = "pipeline-item";
   if (href) {
-    item.href = href;
+    item.href = window.crmUrlWithRole(href, activeRole);
   }
 
   item.innerHTML = `

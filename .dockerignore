@@ -1,0 +1,13 @@
+# Runtime / generated files -- never bake these into the image
+crm.sqlite
+*.sqlite
+*.sqlite-journal
+boot.log
+*.log
+*.png
+
+# Local tooling noise
+.DS_Store
+.git
+.gitignore
+node_modules

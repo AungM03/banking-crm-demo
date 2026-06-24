@@ -12,7 +12,7 @@ window.crmCustomers = [
     email: "elise.parker@example.com",
     primaryBranch: "Indianapolis Downtown",
     personalBanker: "Nora Whitfield",
-    wealthAdvisor: "Avery Chen",
+    wealthAdvisor: "Luke",
     checking: 24780,
     savings: 98300,
     household: 428940,
@@ -42,7 +42,6 @@ window.crmCustomers = [
       { name: "Jordan Parker", relationship: "Spouse", products: "Joint Savings, Auto Loan" }
     ],
     fraudRiskScore: 72,
-    fraudRiskTier: "High",
     fraudCases: 2,
     frontlineNotes: 3,
     lastReviewed: "05/28/2026",
@@ -138,7 +137,6 @@ window.crmCustomers = [
       { name: "Tasha Reed", relationship: "Authorized User", products: "Credit Card" }
     ],
     fraudRiskScore: 54,
-    fraudRiskTier: "Medium",
     fraudCases: 1,
     frontlineNotes: 1,
     lastReviewed: "05/19/2026",
@@ -240,7 +238,6 @@ window.crmCustomers = [
       { name: "Morgan Collins", relationship: "Joint Owner", products: "Joint Checking, CD" }
     ],
     fraudRiskScore: 24,
-    fraudRiskTier: "Low",
     fraudCases: 0,
     frontlineNotes: 0,
     lastReviewed: "05/12/2026",
@@ -334,7 +331,6 @@ window.crmCustomers = [
       { name: "Priya Shah", relationship: "Primary", products: "Checking, Savings, Credit Card" }
     ],
     fraudRiskScore: 47,
-    fraudRiskTier: "Medium",
     fraudCases: 0,
     frontlineNotes: 2,
     lastReviewed: "05/24/2026",
@@ -436,7 +432,6 @@ window.crmCustomers = [
       { name: "Linh Nguyen", relationship: "Spouse", products: "Joint Savings" }
     ],
     fraudRiskScore: 18,
-    fraudRiskTier: "Low",
     fraudCases: 0,
     frontlineNotes: 0,
     lastReviewed: "05/07/2026",
@@ -536,7 +531,6 @@ window.crmCustomers = [
       { name: "Diego Moreno", relationship: "Joint Owner", products: "Joint Checking, Personal Loan" }
     ],
     fraudRiskScore: 81,
-    fraudRiskTier: "High",
     fraudCases: 3,
     frontlineNotes: 5,
     lastReviewed: "05/30/2026",
@@ -609,7 +603,7 @@ window.crmCustomers = [
     email: "grace.bennett@example.com",
     primaryBranch: "Fishers",
     personalBanker: "Nora Whitfield",
-    wealthAdvisor: "Avery Chen",
+    wealthAdvisor: "Luke",
     checking: 32860,
     savings: 214750,
     household: 689430,
@@ -639,7 +633,6 @@ window.crmCustomers = [
       { name: "Henry Bennett", relationship: "Spouse", products: "Joint Savings, Credit Card" }
     ],
     fraudRiskScore: 31,
-    fraudRiskTier: "Low",
     fraudCases: 0,
     frontlineNotes: 1,
     lastReviewed: "05/22/2026",
@@ -692,7 +685,7 @@ window.crmCustomers = [
     ],
     notes: [
       { author: "Nora Whitfield", date: "05/23/2026", text: "Client asked about separating operating cash from reserve balances." },
-      { author: "Avery Chen", date: "05/22/2026", text: "Portfolio review due before next business expansion decision." }
+      { author: "Luke", date: "05/22/2026", text: "Portfolio review due before next business expansion decision." }
     ],
     loans: [
       { type: "Mortgage", balance: 312500, status: "Current", paymentStatus: "Next due 06/17/2026" },
@@ -742,7 +735,6 @@ window.crmCustomers = [
       { name: "Janelle Williams", relationship: "Joint Owner", products: "Joint Checking" }
     ],
     fraudRiskScore: 43,
-    fraudRiskTier: "Medium",
     fraudCases: 0,
     frontlineNotes: 2,
     lastReviewed: "05/27/2026",
@@ -844,7 +836,6 @@ window.crmCustomers = [
       { name: "Mei Lin Carter", relationship: "Primary", products: "Checking, Savings, Business" }
     ],
     fraudRiskScore: 36,
-    fraudRiskTier: "Low",
     fraudCases: 0,
     frontlineNotes: 1,
     lastReviewed: "05/20/2026",
@@ -946,7 +937,6 @@ window.crmCustomers = [
       { name: "Linda Hayes", relationship: "Spouse", products: "Joint Checking, CD" }
     ],
     fraudRiskScore: 68,
-    fraudRiskTier: "Medium",
     fraudCases: 1,
     frontlineNotes: 4,
     lastReviewed: "05/31/2026",
@@ -1004,6 +994,416 @@ window.crmCustomers = [
     loans: [
       { type: "Seasonal Business Line", balance: 38000, status: "Current", paymentStatus: "Interest due 06/28/2026" }
     ]
+  },
+  {
+    accountNumber: "10310422",
+    name: "Ava Brooks",
+    ssn: "000-12-1011",
+    cif: "CIF-3104220",
+    dob: "06/08/1989",
+    zip: "46220",
+    relationship: "4 years",
+    address: "1182 Keystone Ave, Indianapolis, IN 46220",
+    phone: "317-555-0122",
+    email: "ava.brooks@example.com",
+    primaryBranch: "Broad Ripple",
+    personalBanker: "Nora Whitfield",
+    wealthAdvisor: "Not assigned",
+    checking: 6420,
+    savings: 51820,
+    household: 58240,
+    investedBalance: 0,
+    affluencyTier: 1,
+    profitability: {
+      tier: "Medium",
+      annualContribution: 640,
+      mainDriver: "Growing deposits and active digital banking",
+      watchItem: "New mortgage interest may create future lending conversation"
+    },
+    businessAccounts: [],
+    accounts: [
+      { type: "Everyday Checking", account: "10310422", status: "Open", openDate: "08/14/2022", balance: 6420 },
+      { type: "Statement Savings", account: "20310422", status: "Open", openDate: "08/14/2022", balance: 51820 }
+    ],
+    householdMembers: [
+      { name: "Ava Brooks", relationship: "Primary", products: "Checking, Savings" }
+    ],
+    fraudRiskScore: 24,
+    fraudCases: 0,
+    frontlineNotes: 1,
+    lastReviewed: "05/18/2026",
+    fraudHistory: [
+      { type: "Account Takeover", count: 0, impact: 0 },
+      { type: "Card Fraud", count: 0, impact: 0 },
+      { type: "Suspicious Login", count: 1, impact: 7 },
+      { type: "Phishing Concern", count: 0, impact: 0 }
+    ],
+    fraudDrivers: [
+      "Low fraud exposure",
+      "One routine device verification"
+    ],
+    discoverNeeds: [
+      {
+        product: "First Home Savings Review",
+        priority: "Medium",
+        reason: "Savings balance is growing and client has asked about home buying timelines.",
+        nextAction: "Ask about down payment target and home purchase window.",
+        status: "Discovery needed"
+      },
+      {
+        product: "High Yield Savings Education",
+        priority: "Low",
+        reason: "Client keeps most relationship value in savings.",
+        nextAction: "Review savings goals and liquidity needs.",
+        status: "Optional discussion"
+      }
+    ],
+    nextBestAction: {
+      title: "Ask about first home goals",
+      priority: "Medium",
+      reason: "Deposit growth suggests a home purchase conversation may be useful.",
+      banker: "Nora Whitfield",
+      due: "06/24/2026"
+    },
+    alerts: [
+      { label: "First home savings signal", type: "Opportunity" },
+      { label: "Routine device verification", type: "Service" }
+    ],
+    notes: [
+      { author: "Nora Whitfield", date: "05/18/2026", text: "Client mentioned saving for a possible first home within two years." }
+    ],
+    loans: []
+  },
+  {
+    accountNumber: "10344891",
+    name: "Carlos Vega",
+    ssn: "000-12-1012",
+    cif: "CIF-3448910",
+    dob: "12/11/1982",
+    zip: "46227",
+    relationship: "6 years",
+    address: "4420 Madison Ave, Indianapolis, IN 46227",
+    phone: "317-555-0191",
+    email: "carlos.vega@example.com",
+    primaryBranch: "Southport",
+    personalBanker: "Maya Thompson",
+    wealthAdvisor: "Not assigned",
+    checking: 12890,
+    savings: 60600,
+    household: 73490,
+    investedBalance: 0,
+    affluencyTier: 1,
+    profitability: {
+      tier: "Medium",
+      annualContribution: 980,
+      mainDriver: "Deposit relationship and small business service potential",
+      watchItem: "Business cash flow is seasonal"
+    },
+    businessAccounts: [
+      {
+        businessName: "Vega Auto Detail",
+        role: "Owner",
+        products: "Business Checking",
+        relationshipValue: 22500
+      }
+    ],
+    accounts: [
+      { type: "Everyday Checking", account: "10344891", status: "Open", openDate: "03/02/2020", balance: 12890 },
+      { type: "Statement Savings", account: "20344891", status: "Open", openDate: "03/02/2020", balance: 60600 }
+    ],
+    householdMembers: [
+      { name: "Carlos Vega", relationship: "Primary", products: "Checking, Savings, Business" }
+    ],
+    fraudRiskScore: 36,
+    fraudCases: 0,
+    frontlineNotes: 2,
+    lastReviewed: "05/19/2026",
+    fraudHistory: [
+      { type: "Account Takeover", count: 0, impact: 0 },
+      { type: "Card Fraud", count: 1, impact: 11 },
+      { type: "Suspicious Login", count: 1, impact: 8 },
+      { type: "Phishing Concern", count: 0, impact: 0 }
+    ],
+    fraudDrivers: [
+      "Card replacement completed",
+      "Business deposits vary by season"
+    ],
+    discoverNeeds: [
+      {
+        product: "Business Line of Credit",
+        priority: "Medium",
+        reason: "Small business relationship may need flexible cash flow support.",
+        nextAction: "Ask about seasonal inventory and receivables timing.",
+        status: "Needs lending review"
+      },
+      {
+        product: "Merchant Services",
+        priority: "Low",
+        reason: "Business checking relationship does not yet show payment processing products.",
+        nextAction: "Ask how customers pay for services today.",
+        status: "Discovery needed"
+      }
+    ],
+    nextBestAction: {
+      title: "Review business cash flow needs",
+      priority: "Medium",
+      reason: "Business relationship may benefit from working capital and merchant services.",
+      banker: "Maya Thompson",
+      due: "06/18/2026"
+    },
+    alerts: [
+      { label: "Business owner relationship", type: "Business" },
+      { label: "Line of credit opportunity", type: "Lending" }
+    ],
+    notes: [
+      { author: "Maya Thompson", date: "05/19/2026", text: "Client asked about separating business expenses from personal checking." }
+    ],
+    loans: [
+      { type: "Business Line", balance: 15000, status: "Current", paymentStatus: "Next due 06/26/2026" }
+    ]
+  },
+  {
+    accountNumber: "10378215",
+    name: "Hannah Ellis",
+    ssn: "000-12-1013",
+    cif: "CIF-3782150",
+    dob: "04/23/1994",
+    zip: "46032",
+    relationship: "2 years",
+    address: "771 Oak Ridge Dr, Carmel, IN 46032",
+    phone: "317-555-0185",
+    email: "hannah.ellis@example.com",
+    primaryBranch: "Carmel",
+    personalBanker: "Caleb Martin",
+    wealthAdvisor: "Not assigned",
+    checking: 8420,
+    savings: 32800,
+    household: 41220,
+    investedBalance: 0,
+    affluencyTier: 1,
+    profitability: {
+      tier: "Low",
+      annualContribution: 410,
+      mainDriver: "Starter relationship with credit card activity",
+      watchItem: "Help build savings and avoid revolving debt growth"
+    },
+    businessAccounts: [],
+    accounts: [
+      { type: "Student-to-Everyday Checking", account: "10378215", status: "Open", openDate: "01/05/2024", balance: 8420 },
+      { type: "Statement Savings", account: "20378215", status: "Open", openDate: "01/05/2024", balance: 32800 },
+      { type: "Rewards Credit Card", account: "40378215", status: "Active", openDate: "02/15/2024", balance: 1850 }
+    ],
+    householdMembers: [
+      { name: "Hannah Ellis", relationship: "Primary", products: "Checking, Savings, Credit Card" }
+    ],
+    fraudRiskScore: 29,
+    fraudCases: 0,
+    frontlineNotes: 1,
+    lastReviewed: "05/17/2026",
+    fraudHistory: [
+      { type: "Account Takeover", count: 0, impact: 0 },
+      { type: "Card Fraud", count: 0, impact: 0 },
+      { type: "Suspicious Login", count: 1, impact: 7 },
+      { type: "Phishing Concern", count: 1, impact: 6 }
+    ],
+    fraudDrivers: [
+      "Newer digital user",
+      "Phishing education completed"
+    ],
+    discoverNeeds: [
+      {
+        product: "Credit Builder Review",
+        priority: "Medium",
+        reason: "Client has a newer credit card and may benefit from usage and autopay guidance.",
+        nextAction: "Discuss credit score goals and monthly payment habits.",
+        status: "Ready for outreach"
+      },
+      {
+        product: "Emergency Savings Plan",
+        priority: "Low",
+        reason: "Savings balance is healthy for a starter relationship but goals are not documented.",
+        nextAction: "Ask about target reserve and upcoming expenses.",
+        status: "Discovery needed"
+      }
+    ],
+    nextBestAction: {
+      title: "Complete credit builder review",
+      priority: "Medium",
+      reason: "Client has a newer card and could benefit from proactive education.",
+      banker: "Caleb Martin",
+      due: "06/27/2026"
+    },
+    alerts: [
+      { label: "Newer card relationship", type: "Opportunity" },
+      { label: "Phishing education completed", type: "Service" }
+    ],
+    notes: [
+      { author: "Caleb Martin", date: "05/17/2026", text: "Client asked how credit utilization affects score." }
+    ],
+    loans: [
+      { type: "Credit Card", balance: 1850, status: "Active", paymentStatus: "Minimum due 06/20/2026" }
+    ]
+  },
+  {
+    accountNumber: "10402673",
+    name: "Ben Carter",
+    ssn: "000-12-1014",
+    cif: "CIF-4026730",
+    dob: "09/02/1979",
+    zip: "46038",
+    relationship: "11 years",
+    address: "305 Lantern Rd, Fishers, IN 46038",
+    phone: "317-555-0167",
+    email: "ben.carter@example.com",
+    primaryBranch: "Fishers",
+    personalBanker: "Nora Whitfield",
+    wealthAdvisor: "Not assigned",
+    checking: 17600,
+    savings: 78900,
+    household: 96500,
+    investedBalance: 0,
+    affluencyTier: 2,
+    profitability: {
+      tier: "Medium",
+      annualContribution: 1320,
+      mainDriver: "Deposit balances and mortgage relationship",
+      watchItem: "Near wealth threshold but remains regular banking under household policy"
+    },
+    businessAccounts: [],
+    accounts: [
+      { type: "Premier Checking", account: "10402673", status: "Open", openDate: "06/12/2015", balance: 17600 },
+      { type: "Money Market Savings", account: "20402673", status: "Open", openDate: "06/12/2015", balance: 78900 }
+    ],
+    householdMembers: [
+      { name: "Ben Carter", relationship: "Primary", products: "Checking, Savings, Mortgage" },
+      { name: "Mia Carter", relationship: "Spouse", products: "Joint Savings" }
+    ],
+    fraudRiskScore: 41,
+    fraudCases: 0,
+    frontlineNotes: 2,
+    lastReviewed: "05/25/2026",
+    fraudHistory: [
+      { type: "Account Takeover", count: 0, impact: 0 },
+      { type: "Card Fraud", count: 1, impact: 12 },
+      { type: "Suspicious Login", count: 1, impact: 9 },
+      { type: "Phishing Concern", count: 1, impact: 8 }
+    ],
+    fraudDrivers: [
+      "Moderate digital risk",
+      "Recent card dispute resolved"
+    ],
+    discoverNeeds: [
+      {
+        product: "Mortgage Refinance Review",
+        priority: "Medium",
+        reason: "Mortgage relationship and stable deposit balances could support a rate review.",
+        nextAction: "Ask about current home plans and payment comfort.",
+        status: "Needs lending review"
+      },
+      {
+        product: "Savings Goal Review",
+        priority: "Low",
+        reason: "Household balance is close to the wealth threshold but no investment relationship is assigned.",
+        nextAction: "Document goals before any wealth referral.",
+        status: "Discovery needed"
+      }
+    ],
+    nextBestAction: {
+      title: "Review mortgage and savings goals",
+      priority: "Medium",
+      reason: "Client is near the wealth threshold and has a mortgage relationship.",
+      banker: "Nora Whitfield",
+      due: "06/19/2026"
+    },
+    alerts: [
+      { label: "Near wealth threshold", type: "Opportunity" },
+      { label: "Mortgage review available", type: "Lending" }
+    ],
+    notes: [
+      { author: "Nora Whitfield", date: "05/25/2026", text: "Client asked whether extra monthly mortgage payments would help long term." }
+    ],
+    loans: [
+      { type: "Mortgage", balance: 124500, status: "Current", paymentStatus: "Next due 07/01/2026" }
+    ]
+  },
+  {
+    accountNumber: "10433908",
+    name: "Nina Patel",
+    ssn: "000-12-1015",
+    cif: "CIF-4339080",
+    dob: "01/30/1991",
+    zip: "46236",
+    relationship: "3 years",
+    address: "9902 Geist Pointe Dr, Indianapolis, IN 46236",
+    phone: "317-555-0138",
+    email: "nina.patel@example.com",
+    primaryBranch: "Geist",
+    personalBanker: "Maya Thompson",
+    wealthAdvisor: "Not assigned",
+    checking: 3860,
+    savings: 24700,
+    household: 28560,
+    investedBalance: 0,
+    affluencyTier: 1,
+    profitability: {
+      tier: "Low",
+      annualContribution: 360,
+      mainDriver: "Digital-first checking and savings relationship",
+      watchItem: "Limited product depth"
+    },
+    businessAccounts: [],
+    accounts: [
+      { type: "Everyday Checking", account: "10433908", status: "Open", openDate: "09/10/2023", balance: 3860 },
+      { type: "Statement Savings", account: "20433908", status: "Open", openDate: "09/10/2023", balance: 24700 }
+    ],
+    householdMembers: [
+      { name: "Nina Patel", relationship: "Primary", products: "Checking, Savings" }
+    ],
+    fraudRiskScore: 18,
+    fraudCases: 0,
+    frontlineNotes: 0,
+    lastReviewed: "05/13/2026",
+    fraudHistory: [
+      { type: "Account Takeover", count: 0, impact: 0 },
+      { type: "Card Fraud", count: 0, impact: 0 },
+      { type: "Suspicious Login", count: 0, impact: 0 },
+      { type: "Phishing Concern", count: 0, impact: 0 }
+    ],
+    fraudDrivers: [
+      "No recent fraud indicators",
+      "Low transaction exposure"
+    ],
+    discoverNeeds: [
+      {
+        product: "Direct Deposit Review",
+        priority: "Low",
+        reason: "Client is digital-first and may benefit from deeper primary bank setup.",
+        nextAction: "Ask if paycheck or recurring deposits are connected.",
+        status: "Optional discussion"
+      },
+      {
+        product: "Savings Habit Builder",
+        priority: "Low",
+        reason: "Savings relationship is active but goals are undocumented.",
+        nextAction: "Offer automated savings setup if useful.",
+        status: "Optional discussion"
+      }
+    ],
+    nextBestAction: {
+      title: "Ask about direct deposit setup",
+      priority: "Low",
+      reason: "Client may be using the bank as a secondary relationship.",
+      banker: "Maya Thompson",
+      due: "06/29/2026"
+    },
+    alerts: [
+      { label: "Digital-first relationship", type: "Service" },
+      { label: "Low product depth", type: "Opportunity" }
+    ],
+    notes: [
+      { author: "Contact Center", date: "05/13/2026", text: "Client asked about automated savings transfers." }
+    ],
+    loans: []
   }
 ];
 
@@ -1096,8 +1496,131 @@ window.crmFindOffer = function crmFindOffer(type, value) {
   });
 };
 
+window.crmGetFraudRiskTier = function crmGetFraudRiskTier(score) {
+  const numericScore = Number(score || 0);
+
+  if (numericScore >= 81) return "Critical";
+  if (numericScore >= 61) return "High";
+  if (numericScore >= 31) return "Medium";
+  return "Low";
+};
+
+window.crmCustomers.forEach((customer) => {
+  customer.fraudRiskTier = window.crmGetFraudRiskTier(customer.fraudRiskScore);
+});
+
 window.crmIsWealthClient = function crmIsWealthClient(customer) {
-  return Boolean(customer && (customer.affluencyTier >= 3 || customer.investedBalance >= 100000));
+  return Boolean(customer && Number(customer.household || 0) > 100000);
+};
+
+window.crmSanitizeCustomerForRole = function crmSanitizeCustomerForRole(customer, role = window.crmGetActiveRole ? window.crmGetActiveRole() : "admin") {
+  if (!customer) {
+    return null;
+  }
+
+  if (role === "admin") {
+    return customer;
+  }
+
+  if (role === "fraud") {
+    return {
+      accountNumber: customer.accountNumber,
+      name: customer.name,
+      cif: customer.cif,
+      household: 0,
+      businessAccounts: [],
+      accounts: [],
+      householdMembers: [],
+      loans: [],
+      profitability: {
+        tier: "Restricted",
+        annualContribution: 0,
+        mainDriver: "Restricted outside fraud workflow",
+        watchItem: "Restricted outside fraud workflow"
+      },
+      fraudRiskScore: customer.fraudRiskScore,
+      fraudRiskTier: customer.fraudRiskTier,
+      fraudCases: customer.fraudCases,
+      frontlineNotes: customer.frontlineNotes,
+      lastReviewed: customer.lastReviewed,
+      fraudHistory: customer.fraudHistory,
+      fraudDrivers: customer.fraudDrivers,
+      fraudNotes: customer.fraudNotes || [],
+      alerts: customer.alerts,
+      notes: customer.notes
+    };
+  }
+
+  if (role === "wealth") {
+    if (!window.crmIsWealthClient(customer)) {
+      return null;
+    }
+
+    return {
+      ...customer,
+      fraudDetailAccess: "score_only",
+      fraudCases: null,
+      frontlineNotes: null,
+      lastReviewed: "Restricted to Fraud Team",
+      fraudHistory: [],
+      fraudDrivers: []
+    };
+  }
+
+  if (role === "banker") {
+    const isWealthClient = window.crmIsWealthClient(customer);
+
+    return {
+      ...customer,
+      wealthDataAccess: isWealthClient ? "restricted" : "full",
+      wealthAdvisor: isWealthClient ? "Restricted to Wealth" : customer.wealthAdvisor,
+      investedBalance: isWealthClient ? 0 : customer.investedBalance,
+      affluencyTier: isWealthClient ? 0 : customer.affluencyTier,
+      fraudDetailAccess: "score_only",
+      fraudCases: null,
+      frontlineNotes: null,
+      lastReviewed: "Restricted to Fraud Team",
+      fraudHistory: [],
+      fraudDrivers: []
+    };
+  }
+
+  if (role === "loans") {
+    if (!customer.loans.length) {
+      return null;
+    }
+
+    return {
+      ...customer,
+      limitedProfile: true,
+      checking: 0,
+      savings: 0,
+      household: customer.loans.reduce((total, loan) => total + loan.balance, 0),
+      wealthDataAccess: "restricted",
+      wealthAdvisor: "Restricted to Wealth",
+      investedBalance: 0,
+      affluencyTier: 0,
+      profitability: {
+        tier: "Restricted",
+        annualContribution: 0,
+        mainDriver: "Restricted outside lending workflow",
+        watchItem: "Restricted outside lending workflow"
+      },
+      businessAccounts: [],
+      accounts: customer.accounts.map((account) => ({
+        ...account,
+        balance: 0
+      })),
+      fraudDetailAccess: "score_only",
+      fraudCases: null,
+      frontlineNotes: null,
+      lastReviewed: "Restricted to Fraud Team",
+      fraudHistory: [],
+      fraudDrivers: []
+    };
+  }
+
+  return null;
 };
 
 window.crmFindLookupRecord = function crmFindLookupRecord(target, type, value) {
@@ -1118,16 +1641,19 @@ window.crmFindLookupRecord = function crmFindLookupRecord(target, type, value) {
   }
 
   const customer = window.crmFindCustomer(type, value);
+  const visibleCustomer = window.crmSanitizeCustomerForRole
+    ? window.crmSanitizeCustomerForRole(customer)
+    : customer;
 
   if (target === "wealth") {
-    return window.crmIsWealthClient(customer) ? customer : null;
+    return window.crmIsWealthClient(customer) ? visibleCustomer : null;
   }
 
   if (target === "loanCustomer") {
-    return customer && customer.loans.length > 0 ? customer : null;
+    return customer && customer.loans.length > 0 ? visibleCustomer : null;
   }
 
-  return customer;
+  return visibleCustomer;
 };
 
 window.crmFormatCurrency = function crmFormatCurrency(value) {
@@ -1146,8 +1672,8 @@ window.crmRoleProfiles = {
   admin: {
     label: "Admin",
     department: "Administration",
-    name: "Morgan Lee",
-    firstName: "Morgan",
+    name: "Aung",
+    firstName: "Aung",
     email: "admin.crm.demo@gmail.com",
     page: "home.html?role=admin",
     dashboardFocus: "Full oversight across relationship growth, access, profitability, fraud risk, and CRM adoption.",
@@ -1168,7 +1694,7 @@ window.crmRoleProfiles = {
       "Monitor profitability, fraud, lending, and campaign workflows"
     ],
     snapshot: [
-      { label: "CRM Users", metric: "roleCount", help: "Active test roles" },
+      { label: "CRM Roles", metric: "roleCount", help: "Active test roles" },
       { label: "Customers", metric: "customerCount", help: "Prototype customer records" },
       { label: "Annual Profitability", metric: "annualContribution", format: "currency", help: "Estimated contribution" },
       { label: "High Risk Clients", metric: "highRiskCount", help: "Fraud score 60+" }
@@ -1187,8 +1713,8 @@ window.crmRoleProfiles = {
   hr: {
     label: "HR",
     department: "Human Resources",
-    name: "Camille Brown",
-    firstName: "Camille",
+    name: "Lizzie",
+    firstName: "Lizzie",
     email: "hr.crm.demo@gmail.com",
     page: "home.html?role=hr",
     dashboardFocus: "Employee readiness, training, access reviews, and consistent CRM usage.",
@@ -1209,7 +1735,7 @@ window.crmRoleProfiles = {
       "Escalate incorrect access requests"
     ],
     snapshot: [
-      { label: "Test Users", metric: "roleCount", help: "Active demo accounts" },
+      { label: "Test Roles", metric: "roleCount", help: "Active demo roles" },
       { label: "Training Items", metric: "hrTaskCount", help: "Open readiness tasks" },
       { label: "Access Reviews", metric: "accessReviewCount", help: "Pending approvals" },
       { label: "Restricted Customer Data", value: "Hidden", help: "Financial data blocked" }
@@ -1221,7 +1747,7 @@ window.crmRoleProfiles = {
     ],
     actions: [
       { label: "Review Role Directory", href: "home.html", detail: "See all role dashboards." },
-      { label: "Return to Login", href: "login.html", detail: "Switch to another demo account." }
+      { label: "Switch Role on Home", href: "home.html#roleSwitcher", detail: "Use the role menu to compare CRM access views." }
     ]
   },
   banker: {
@@ -1270,8 +1796,8 @@ window.crmRoleProfiles = {
   wealth: {
     label: "Wealth",
     department: "Wealth Management",
-    name: "Avery Chen",
-    firstName: "Avery",
+    name: "Luke",
+    firstName: "Luke",
     email: "wealth.crm.demo@gmail.com",
     page: "home.html?role=wealth",
     dashboardFocus: "High-net-worth client management, investment portfolios, asset allocation, and wealth relationship growth.",
@@ -1314,8 +1840,8 @@ window.crmRoleProfiles = {
   fraud: {
     label: "Fraud",
     department: "Fraud Team",
-    name: "Jordan Blake",
-    firstName: "Jordan",
+    name: "Preston",
+    firstName: "Preston",
     email: "fraud.crm.demo@gmail.com",
     page: "home.html?role=fraud",
     dashboardFocus: "Fraud matrix, disputes, risk scoring, alerts, and investigation workflow.",
@@ -1357,8 +1883,8 @@ window.crmRoleProfiles = {
   loans: {
     label: "Loans",
     department: "Loans and Mortgage",
-    name: "Taylor Brooks",
-    firstName: "Taylor",
+    name: "Gavin",
+    firstName: "Gavin",
     email: "loans.crm.demo@gmail.com",
     page: "home.html?role=loans",
     dashboardFocus: "PL/BL leads, mortgage opportunities, refinancing, credit review, and lending follow-up.",
@@ -1398,8 +1924,8 @@ window.crmRoleProfiles = {
   marketing: {
     label: "Marketing",
     department: "Marketing",
-    name: "Riley Patel",
-    firstName: "Riley",
+    name: "Alex",
+    firstName: "Alex",
     email: "marketing.crm.demo@gmail.com",
     page: "home.html?role=marketing",
     dashboardFocus: "Aggregated customer segments, product usage trends, and campaign-ready opportunity signals.",
@@ -1432,7 +1958,7 @@ window.crmRoleProfiles = {
     ],
     actions: [
       { label: "View CRM Home", href: "home.html", detail: "Compare role access inside the same CRM home." },
-      { label: "Return to Login", href: "login.html", detail: "Switch demo accounts." }
+      { label: "Switch Role on Home", href: "home.html#roleSwitcher", detail: "Use the role menu to compare CRM access views." }
     ]
   }
 };
@@ -1470,7 +1996,14 @@ window.crmRoleApiPermissions = {
     "edit_customers",
     "edit_offers",
     "edit_businesses",
-    "edit_employees"
+    "edit_employees",
+    "view_wealth_profile",
+    "edit_wealth_profile",
+    "manage_wealth_notes",
+    "view_lending_profile",
+    "edit_lending_profile",
+    "manage_lending_notes",
+    "manage_fraud_notes"
   ],
   hr: [
     "view_dashboard",
@@ -1497,7 +2030,8 @@ window.crmRoleApiPermissions = {
     "edit_bank_notes",
     "edit_meetings",
     "edit_customers",
-    "edit_businesses"
+    "edit_businesses",
+    "view_lending_profile"
   ],
   wealth: [
     "view_dashboard",
@@ -1513,7 +2047,10 @@ window.crmRoleApiPermissions = {
     "manage_meetings",
     "edit_bank_notes",
     "edit_meetings",
-    "edit_customers"
+    "edit_customers",
+    "view_wealth_profile",
+    "edit_wealth_profile",
+    "manage_wealth_notes"
   ],
   fraud: [
     "view_dashboard",
@@ -1521,7 +2058,8 @@ window.crmRoleApiPermissions = {
     "view_fraud_summary",
     "view_fraud_detail",
     "search_fraud_risk",
-    "search_segments"
+    "search_segments",
+    "manage_fraud_notes"
   ],
   loans: [
     "view_dashboard",
@@ -1539,7 +2077,10 @@ window.crmRoleApiPermissions = {
     "edit_bank_notes",
     "edit_meetings",
     "edit_customers",
-    "edit_businesses"
+    "edit_businesses",
+    "view_lending_profile",
+    "edit_lending_profile",
+    "manage_lending_notes"
   ],
   marketing: [
     "view_dashboard",
@@ -1578,13 +2119,17 @@ window.crmPagePermissions = {
   activity: "view_activity"
 };
 
-window.crmLoginUsers = Object.entries(window.crmRoleProfiles).map(([role, profile]) => ({
-  role,
-  label: profile.label,
-  name: profile.name,
-  email: profile.email,
-  page: profile.page
-}));
+window.crmLoginUsers = [
+  { role: "admin", label: "Admin", name: "Aung", email: "admin.crm.demo@gmail.com", page: "home.html?role=admin" },
+  { role: "admin", label: "Admin", name: "Abby", email: "admin.abby.crm.demo@gmail.com", page: "home.html?role=admin" },
+  { role: "hr", label: "HR", name: "Lizzie", email: "hr.crm.demo@gmail.com", page: "home.html?role=hr" },
+  { role: "hr", label: "HR", name: "Sydney", email: "hr.sydney.crm.demo@gmail.com", page: "home.html?role=hr" },
+  { role: "banker", label: "Banker", name: "Nora Whitfield", email: "banker.crm.demo@gmail.com", page: "home.html?role=banker" },
+  { role: "wealth", label: "Wealth", name: "Luke", email: "wealth.crm.demo@gmail.com", page: "home.html?role=wealth" },
+  { role: "fraud", label: "Fraud", name: "Preston", email: "fraud.crm.demo@gmail.com", page: "home.html?role=fraud" },
+  { role: "loans", label: "Loans", name: "Gavin", email: "loans.crm.demo@gmail.com", page: "home.html?role=loans" },
+  { role: "marketing", label: "Marketing", name: "Alex", email: "marketing.crm.demo@gmail.com", page: "home.html?role=marketing" }
+];
 
 window.crmLeads = [
   {
@@ -1778,21 +2323,36 @@ window.crmMarketingSegments = [
 ];
 
 window.crmHrTasks = [
-  { title: "Banker note consistency coaching", status: "Open", owner: "Camille Brown" },
-  { title: "Fraud dashboard access recertification", status: "Pending", owner: "Camille Brown" },
-  { title: "Loans role onboarding checklist", status: "New", owner: "Camille Brown" },
-  { title: "Marketing privacy training", status: "Scheduled", owner: "Camille Brown" }
+  { title: "Banker note consistency coaching", status: "Open", owner: "Lizzie" },
+  { title: "Fraud dashboard access recertification", status: "Pending", owner: "Lizzie" },
+  { title: "Loans role onboarding checklist", status: "New", owner: "Sydney" },
+  { title: "Marketing privacy training", status: "Scheduled", owner: "Sydney" }
 ];
 
 window.crmEmployees = [
   {
+    employeeId: "EMP-1000",
+    name: "Aung",
+    email: "admin.crm.demo@gmail.com",
+    department: "Administration",
+    role: "CRM Admin",
+    branch: "Corporate Office",
+    manager: "Board Oversight",
+    accessLevel: "Full CRM administration",
+    status: "Active",
+    hireDate: "06/01/2024",
+    trainingStatus: "Current",
+    disclosures: "Admin test account",
+    linkedBusinessId: ""
+  },
+  {
     employeeId: "EMP-1001",
-    name: "Camille Brown",
+    name: "Lizzie",
     email: "hr.crm.demo@gmail.com",
     department: "Human Resources",
     role: "HR Business Partner",
     branch: "Corporate Office",
-    manager: "Morgan Lee",
+    manager: "Aung",
     accessLevel: "Employee records and access readiness",
     status: "Active",
     hireDate: "08/14/2019",
@@ -1817,12 +2377,12 @@ window.crmEmployees = [
   },
   {
     employeeId: "EMP-1003",
-    name: "Jordan Blake",
+    name: "Preston",
     email: "fraud.crm.demo@gmail.com",
     department: "Fraud Team",
     role: "Fraud Analyst",
     branch: "Operations Center",
-    manager: "Morgan Lee",
+    manager: "Aung",
     accessLevel: "Fraud matrix and case investigation",
     status: "Active",
     hireDate: "11/09/2020",
@@ -1832,7 +2392,7 @@ window.crmEmployees = [
   },
   {
     employeeId: "EMP-1004",
-    name: "Taylor Brooks",
+    name: "Gavin",
     email: "loans.crm.demo@gmail.com",
     department: "Loans and Mortgage",
     role: "Loan Specialist",
@@ -1847,12 +2407,12 @@ window.crmEmployees = [
   },
   {
     employeeId: "EMP-1005",
-    name: "Riley Patel",
+    name: "Alex",
     email: "marketing.crm.demo@gmail.com",
     department: "Marketing",
     role: "Campaign Manager",
     branch: "Corporate Office",
-    manager: "Morgan Lee",
+    manager: "Aung",
     accessLevel: "Aggregated campaign and segment data",
     status: "Active",
     hireDate: "06/22/2022",
@@ -1862,17 +2422,47 @@ window.crmEmployees = [
   },
   {
     employeeId: "EMP-1006",
-    name: "Avery Chen",
+    name: "Luke",
     email: "wealth.crm.demo@gmail.com",
     department: "Wealth Management",
     role: "Wealth Advisor",
     branch: "Indianapolis Downtown",
-    manager: "Morgan Lee",
+    manager: "Aung",
     accessLevel: "Wealth client profile and investment portfolio",
     status: "Active",
     hireDate: "09/12/2018",
     trainingStatus: "Current",
     disclosures: "No outside business relationship on file",
+    linkedBusinessId: ""
+  },
+  {
+    employeeId: "EMP-1008",
+    name: "Sydney",
+    email: "hr.sydney.crm.demo@gmail.com",
+    department: "Human Resources",
+    role: "HR Specialist",
+    branch: "Corporate Office",
+    manager: "Aung",
+    accessLevel: "Employee records and access readiness",
+    status: "Active",
+    hireDate: "03/11/2024",
+    trainingStatus: "Current",
+    disclosures: "HR test account",
+    linkedBusinessId: ""
+  },
+  {
+    employeeId: "EMP-1009",
+    name: "Abby",
+    email: "admin.abby.crm.demo@gmail.com",
+    department: "Administration",
+    role: "CRM Admin",
+    branch: "Corporate Office",
+    manager: "Board Oversight",
+    accessLevel: "Full CRM administration",
+    status: "Active",
+    hireDate: "06/01/2024",
+    trainingStatus: "Current",
+    disclosures: "Admin test account",
     linkedBusinessId: ""
   },
   {
@@ -1944,7 +2534,7 @@ window.crmBusinessRecords = [
   {
     businessId: "BUS-9005",
     businessName: "Brooks Home Services LLC",
-    ownerName: "Taylor Brooks",
+    ownerName: "Gavin",
     ownerType: "Employee",
     linkedEmployeeId: "EMP-1004",
     products: "Business Checking",
@@ -2097,7 +2687,7 @@ window.crmLookupProfiles = {
     noAccessMessage: "",
     methods: [
       { key: "employeeId", target: "employee", label: "Employee ID", methodLabel: "Employee ID Search", formTitle: "Enter employee ID", inputLabel: "Employee ID", hint: "Try employee ID EMP-1004.", example: "EMP-1004" },
-      { key: "employeeName", target: "employee", label: "Employee Name", methodLabel: "Employee Name Search", formTitle: "Enter employee name", inputLabel: "Employee name", hint: "Try Taylor Brooks or Camille Brown.", example: "Taylor Brooks" },
+      { key: "employeeName", target: "employee", label: "Employee Name", methodLabel: "Employee Name Search", formTitle: "Enter employee name", inputLabel: "Employee name", hint: "Try Gavin or Lizzie.", example: "Gavin" },
       { key: "employeeEmail", target: "employee", label: "Employee Email", methodLabel: "Employee Email Search", formTitle: "Enter employee email", inputLabel: "Employee email", hint: "Try loans.crm.demo@gmail.com.", example: "loans.crm.demo@gmail.com" },
       { key: "department", target: "employee", label: "Department", methodLabel: "Department Search", formTitle: "Enter department", inputLabel: "Department", hint: "Try Loans and Mortgage or Fraud Team.", example: "Loans and Mortgage" }
     ]
@@ -2105,27 +2695,49 @@ window.crmLookupProfiles = {
 };
 
 window.crmNormalizeRole = function crmNormalizeRole(role) {
-  return window.crmRoleProfiles[role] ? role : "admin";
+  const normalizedRole = String(role || "").trim().toLowerCase();
+  return window.crmRoleProfiles[normalizedRole] ? normalizedRole : "admin";
 };
 
 window.crmSetActiveRole = function crmSetActiveRole(role) {
-  localStorage.setItem("crmActiveRole", window.crmNormalizeRole(role));
+  const normalizedRole = window.crmNormalizeRole(role);
+  localStorage.setItem("crmActiveRole", normalizedRole);
+  localStorage.removeItem("crmSessionToken");
+
+  try {
+    const activeUser = JSON.parse(localStorage.getItem("crmActiveUser")) || null;
+
+    if (activeUser && window.crmNormalizeRole(activeUser.role) !== normalizedRole) {
+      localStorage.removeItem("crmActiveUser");
+    }
+  } catch (error) {
+    localStorage.removeItem("crmActiveUser");
+  }
 };
 
 window.crmGetActiveRole = function crmGetActiveRole() {
+  const roleFromUrl = new URLSearchParams(window.location.search).get("role");
+
+  if (roleFromUrl) {
+    const normalizedRole = window.crmNormalizeRole(roleFromUrl);
+    localStorage.setItem("crmActiveRole", normalizedRole);
+    return normalizedRole;
+  }
+
   return window.crmNormalizeRole(localStorage.getItem("crmActiveRole") || "admin");
 };
 
 window.crmSetActiveUser = function crmSetActiveUser(user) {
+  window.crmSetActiveRole(user.role);
   localStorage.setItem("crmActiveUser", JSON.stringify({
     id: user.id,
     role: user.role,
     name: user.name,
+    firstName: user.firstName,
     email: user.email,
     page: user.page,
     permissions: user.permissions || []
   }));
-  window.crmSetActiveRole(user.role);
 };
 
 window.crmGetActiveUser = function crmGetActiveUser() {
@@ -2137,13 +2749,14 @@ window.crmGetActiveUser = function crmGetActiveUser() {
 };
 
 window.crmGetPermissions = function crmGetPermissions() {
+  const activeRole = window.crmGetActiveRole();
   const user = window.crmGetActiveUser();
 
-  if (user && Array.isArray(user.permissions) && user.permissions.length) {
+  if (user && window.crmNormalizeRole(user.role) === activeRole && Array.isArray(user.permissions) && user.permissions.length) {
     return user.permissions;
   }
 
-  return window.crmRoleApiPermissions[window.crmGetActiveRole()] || [];
+  return window.crmRoleApiPermissions[activeRole] || [];
 };
 
 window.crmHasPermission = function crmHasPermission(permission) {
@@ -2181,6 +2794,35 @@ window.crmClearSession = function crmClearSession() {
   localStorage.removeItem("crmActiveUser");
 };
 
-window.crmClientUrl = function crmClientUrl(accountNumber) {
-  return `client.html?type=accountNumber&value=${encodeURIComponent(accountNumber)}`;
+window.crmUrlWithRole = function crmUrlWithRole(url, role = window.crmGetActiveRole()) {
+  const urlParts = String(url || "").split("#");
+  const pathAndQuery = urlParts[0];
+  const hash = urlParts.length > 1 ? `#${urlParts.slice(1).join("#")}` : "";
+  const queryIndex = pathAndQuery.indexOf("?");
+  const path = queryIndex >= 0 ? pathAndQuery.slice(0, queryIndex) : pathAndQuery;
+  const query = queryIndex >= 0 ? pathAndQuery.slice(queryIndex + 1) : "";
+  const params = new URLSearchParams(query);
+
+  params.set("role", window.crmNormalizeRole(role));
+  return `${path}?${params.toString()}${hash}`;
 };
+
+window.crmApplyRoleToLinks = function crmApplyRoleToLinks(container = document) {
+  container.querySelectorAll("a[href]").forEach((link) => {
+    const href = link.getAttribute("href");
+
+    if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:") || !href.includes(".html")) {
+      return;
+    }
+
+    link.setAttribute("href", window.crmUrlWithRole(href));
+  });
+};
+
+window.crmClientUrl = function crmClientUrl(accountNumber) {
+  return window.crmUrlWithRole(`client.html?type=accountNumber&value=${encodeURIComponent(accountNumber)}`);
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  window.crmApplyRoleToLinks();
+});

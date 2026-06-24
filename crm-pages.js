@@ -76,6 +76,16 @@
     activity: "Activity Log"
   };
 
+  const listPageHeaders = {
+    leads: { eyebrow: "Growth", title: "Leads and Opportunities", subtitleId: "leadCountSubtitle", loadingText: "Loading leads" },
+    offers: { eyebrow: "Campaigns", title: "Offers and Segments", subtitleId: "offerCountSubtitle", loadingText: "Loading offers" },
+    fraudWatch: { eyebrow: "Protection", title: "Fraud Risk Watch", subtitleId: "fraudWatchSubtitle", loadingText: "Loading risk records" },
+    meetings: { eyebrow: "Engagement", title: "Meetings", subtitleId: "meetingsSubtitle", loadingText: "Loading meetings" },
+    pipeline: { eyebrow: "Pipeline", title: "Opportunity Pipeline", subtitleId: "pipelineSubtitle", loadingText: "Loading pipeline" },
+    profitability: { eyebrow: "Analytics", title: "Customer Profitability", subtitleId: "profitSubtitle", loadingText: "Loading profitability records" },
+    activity: { eyebrow: "System", title: "Activity Log", subtitleId: "activitySubtitle", loadingText: "Loading audit events" }
+  };
+
   init();
 
   async function init() {
@@ -86,6 +96,8 @@
       showRestricted();
       return;
     }
+
+    renderAuthorizedPageHeader();
 
     const renderers = {
       leads: renderLeads,
@@ -114,10 +126,34 @@
     }
   }
 
+  function renderAuthorizedPageHeader() {
+    const header = listPageHeaders[page];
+    const target = document.querySelector("[data-page-heading]");
+
+    if (!header || !target) {
+      return;
+    }
+
+    target.replaceChildren();
+
+    const eyebrow = document.createElement("p");
+    eyebrow.className = "eyebrow";
+    eyebrow.textContent = header.eyebrow;
+
+    const title = document.createElement("h1");
+    title.textContent = header.title;
+
+    const subtitle = document.createElement("p");
+    subtitle.id = header.subtitleId;
+    subtitle.textContent = header.loadingText;
+
+    target.append(eyebrow, title, subtitle);
+  }
+
   function applyPageChrome() {
     const allowed = navAccess[activeRole] || navAccess.admin;
 
-    document.querySelectorAll("[data-nav-module]").forEach((link) => {
+    document.querySelectorAll("a[data-nav-module]").forEach((link) => {
       const isVisible = allowed.includes(link.dataset.navModule)
         && (!window.crmCanAccessModule || window.crmCanAccessModule(link.dataset.navModule));
       link.classList.toggle("hidden", !isVisible);
@@ -810,7 +846,7 @@
         <td><span class="status-badge ${statusClass(customer.fraudRiskTier)}">${customer.fraudRiskTier}</span></td>
         <td>${customer.fraudCases ?? "Score only"}</td>
         <td>${customer.lastReviewed}</td>
-        <td>${canOpenFraud() ? `<a class="primary-link" href="fraud.html?accountNumber=${customer.accountNumber}">Open</a>` : "Summary only"}</td>
+        <td>${canOpenFraud() ? `<a class="primary-link" href="${window.crmUrlWithRole(`fraud.html?accountNumber=${customer.accountNumber}`, activeRole)}">Open</a>` : "Summary only"}</td>
       </tr>
     `);
   }
@@ -1220,7 +1256,7 @@
         <td><span class="status-badge ${statusClass(customer.profitability.tier)}">${customer.profitability.tier}</span></td>
         <td>${customer.profitability.mainDriver}</td>
         <td>${customer.profitability.watchItem}</td>
-        <td><a class="primary-link" href="${activeRole === "wealth" ? `wealth.html?accountNumber=${customer.accountNumber}` : window.crmClientUrl(customer.accountNumber)}">View</a></td>
+        <td><a class="primary-link" href="${activeRole === "wealth" ? window.crmUrlWithRole(`wealth.html?accountNumber=${customer.accountNumber}`, activeRole) : window.crmClientUrl(customer.accountNumber)}">View</a></td>
       </tr>
     `);
   }
@@ -1619,7 +1655,11 @@
   }
 
   function showRestricted(message = "") {
+    document.body.classList.add("restricted-view");
     document.querySelectorAll("[data-page-content]").forEach((element) => {
+      element.classList.add("hidden");
+    });
+    document.querySelectorAll(".list-topbar, .detail-topbar").forEach((element) => {
       element.classList.add("hidden");
     });
     const restrictedState = document.querySelector("#restrictedState");

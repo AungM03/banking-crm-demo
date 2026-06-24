@@ -87,7 +87,7 @@ if (noteList) {
     }
 
     if (!note || !canRemoveNote(note)) {
-      showNoteMessage("Only notes added by Current User can be removed.", "error");
+      showNoteMessage("Only notes added by the active user can be removed.", "error");
       return;
     }
 
@@ -131,7 +131,7 @@ initClientProfile();
 
 async function initClientProfile() {
   if (window.crmHasAnyPermission && !window.crmHasAnyPermission(["search_customers", "search_wealth_customers", "search_loan_customers"])) {
-    showNotFound("Customer profiles are restricted for this role.");
+    showRestrictedAccess("Customer profiles are restricted for this role.");
     return;
   }
 
@@ -156,8 +156,9 @@ function renderClient(customer) {
   document.querySelector("#customerMeta").textContent = `Account ${customer.accountNumber} | ${customer.cif}`;
   document.querySelector("#fraudScore").textContent = `${customer.fraudRiskScore} / 100`;
   renderFraudScoreCard(customer);
-  document.querySelector("#discoverNeedsLink").href = `discover.html?accountNumber=${encodeURIComponent(customer.accountNumber)}`;
+  document.querySelector("#discoverNeedsLink").href = window.crmUrlWithRole(`discover.html?accountNumber=${encodeURIComponent(customer.accountNumber)}`);
   document.querySelector("#discoverNeedsCount").textContent = `${customer.discoverNeeds.length} recommendations`;
+  renderDepartmentLinks(customer);
 
   document.querySelector("#householdBalance").textContent = window.crmFormatCurrency(customer.household);
   document.querySelector("#checkingBalance").textContent = window.crmFormatCurrency(customer.checking);
@@ -191,6 +192,23 @@ function renderClient(customer) {
   renderServiceWorkflow(customer);
 }
 
+function renderDepartmentLinks(customer) {
+  const wealthLink = document.querySelector("#wealthProfileLink");
+  const lendingLink = document.querySelector("#lendingProfileLink");
+  const canOpenWealth = (!window.crmHasPermission || window.crmHasPermission("view_wealth_profile")) && window.crmIsWealthClient(customer);
+  const canOpenLending = (!window.crmHasPermission || window.crmHasPermission("view_lending_profile")) && customer.loans.length > 0;
+
+  if (wealthLink) {
+    wealthLink.href = window.crmUrlWithRole(`wealth.html?accountNumber=${encodeURIComponent(customer.accountNumber)}`);
+    wealthLink.classList.toggle("hidden", !canOpenWealth);
+  }
+
+  if (lendingLink) {
+    lendingLink.href = window.crmUrlWithRole(`lending.html?accountNumber=${encodeURIComponent(customer.accountNumber)}`);
+    lendingLink.classList.toggle("hidden", !canOpenLending);
+  }
+}
+
 function renderRoleRestrictions(customer) {
   if (customer.wealthDataAccess === "restricted") {
     document.querySelector("#investedBalance").textContent = "Restricted";
@@ -216,7 +234,7 @@ function renderFraudScoreCard(customer) {
   fraudCard.className = `profile-action-card fraud-matrix-card risk-${customer.fraudRiskTier.toLowerCase()}`;
 
   if (canOpenFraudDetails) {
-    fraudCard.href = `fraud.html?accountNumber=${encodeURIComponent(customer.accountNumber)}`;
+    fraudCard.href = window.crmUrlWithRole(`fraud.html?accountNumber=${encodeURIComponent(customer.accountNumber)}`);
     fraudCard.removeAttribute("aria-disabled");
     fraudCard.removeAttribute("title");
     return;
@@ -276,7 +294,7 @@ function renderNotes(notes) {
 
 function startNoteEdit(note) {
   if (!note || !canEditNote(note)) {
-    showNoteMessage("Only notes added by Current User can be edited.", "error");
+    showNoteMessage("Only notes added by the active user can be edited.", "error");
     return;
   }
 
@@ -298,11 +316,19 @@ function clearNoteEditMode(resetInput = true) {
 }
 
 function canEditNote(note) {
-  return Boolean(note && note.author === "Current User" && note.dbId && (!window.crmHasPermission || window.crmHasPermission("edit_bank_notes")));
+  return Boolean(note && note.author === getActiveNoteAuthor() && note.dbId && (!window.crmHasPermission || window.crmHasPermission("edit_bank_notes")));
 }
 
 function canRemoveNote(note) {
-  return Boolean(note && note.author === "Current User" && (note.dbId || note.localId));
+  return Boolean(note && note.author === getActiveNoteAuthor() && (note.dbId || note.localId));
+}
+
+function getActiveNoteAuthor() {
+  const user = window.crmGetActiveUser ? window.crmGetActiveUser() : null;
+  const role = window.crmGetActiveRole ? window.crmGetActiveRole() : "admin";
+  const profile = window.crmRoleProfiles ? window.crmRoleProfiles[role] : null;
+
+  return user?.name || profile?.name || "Current User";
 }
 
 function showNoteMessage(message, type) {
@@ -582,10 +608,18 @@ function getTotalLoanBalance(loans) {
 function showNotFound(customMessage) {
   document.querySelector("#clientProfile").classList.add("hidden");
   document.querySelector("#notFoundState").classList.remove("hidden");
+  document.querySelector("#notFoundTitle").textContent = "Client not found";
 
   const message = customMessage || (searchValue
     ? `No client matched "${searchValue}". Please return to lookup and try another test case.`
     : "No lookup value was provided. Please return to lookup and choose a search method.");
 
   document.querySelector("#notFoundMessage").textContent = message;
+}
+
+function showRestrictedAccess(message) {
+  document.querySelector("#clientProfile").classList.add("hidden");
+  document.querySelector("#notFoundState").classList.remove("hidden");
+  document.querySelector("#notFoundTitle").textContent = "Restricted access";
+  document.querySelector("#notFoundMessage").textContent = message || "This role cannot open this customer profile.";
 }

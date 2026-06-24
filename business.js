@@ -23,7 +23,7 @@ if (businessEditForm) {
 
 async function initBusinessProfile() {
   if (window.crmHasAnyPermission && !window.crmHasAnyPermission(["search_businesses", "search_employee_businesses"])) {
-    showBusinessNotFound("Business account lookup is restricted for this role.");
+    showBusinessRestricted("Business account lookup is restricted for this role.");
     return;
   }
 
@@ -249,5 +249,13 @@ async function renderLinkedRecord(business) {
 function showBusinessNotFound(message) {
   document.querySelector("#businessProfile").classList.add("hidden");
   document.querySelector("#businessNotFoundState").classList.remove("hidden");
-  document.querySelector("#businessNotFoundState p").textContent = message;
+  document.querySelector("#businessNotFoundTitle").textContent = "Business not found";
+  document.querySelector("#businessNotFoundMessage").textContent = message;
+}
+
+function showBusinessRestricted(message) {
+  document.querySelector("#businessProfile").classList.add("hidden");
+  document.querySelector("#businessNotFoundState").classList.remove("hidden");
+  document.querySelector("#businessNotFoundTitle").textContent = "Restricted access";
+  document.querySelector("#businessNotFoundMessage").textContent = message || "This role cannot open this business account.";
 }

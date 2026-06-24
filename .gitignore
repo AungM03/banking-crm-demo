@@ -1,0 +1,16 @@
+# Runtime databases and logs
+crm.sqlite
+*.sqlite
+*.sqlite-journal
+*.log
+
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies and editor/OS files
+node_modules/
+.DS_Store
+.idea/
+.vscode/

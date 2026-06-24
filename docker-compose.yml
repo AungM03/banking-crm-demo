@@ -1,0 +1,23 @@
+services:
+  crm:
+    build: .
+    # Maps your machine's port 4173 to the container. Open http://localhost:4173
+    ports:
+      - "4173:4173"
+    environment:
+      PORT: "4173"
+      HOST: "0.0.0.0"
+      # Keep the database on the mounted volume so data survives restarts.
+      DB_PATH: "/app/data/crm.sqlite"
+      # Optional: enable AI-assisted fraud analysis by setting your key here,
+      # or pass it on the command line. Without it, the keyword + concept
+      # engine runs (same as the offline demo).
+      # ANTHROPIC_API_KEY: "sk-ant-xxxxxxxx"
+    # Persist the SQLite database between restarts. Remove this (and DB_PATH
+    # above) if you'd rather start fresh each run.
+    volumes:
+      - crm-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  crm-data:

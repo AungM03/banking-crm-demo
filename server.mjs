@@ -3,35 +3,74 @@ import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, extname, join, normalize, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { randomBytes, scrypt as scryptCallback, timingSafeEqual } from "node:crypto";
-import { promisify } from "node:util";
+import "./lendingRules.js";
+import "./wealthRules.js";
+import "./discoverRules.js";
+import "./trainingDataGenerator.js";
+import "./mlModelTrainer.js";
+import "./mlPredictor.js";
+import "./models/activeMlModels.js";
+import "./fraudEngine.js";
+import "./recommendationEngine.js";
+import { classifyFraudNote, llmClassifierAvailable } from "./fraudLlmClassifier.mjs";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
-const DB_PATH = join(ROOT, "crm.sqlite");
+const DB_PATH = (globalThis.process && globalThis.process.env && globalThis.process.env.DB_PATH)
+  ? globalThis.process.env.DB_PATH
+  : join(ROOT, "crm.sqlite");
 const SCHEMA_PATH = join(ROOT, "schema.sql");
 const SEED_PATH = join(ROOT, "seed.sql");
 const PROCESS_ENV = globalThis.process && globalThis.process.env ? globalThis.process.env : {};
 const PROCESS_ARGS = globalThis.process && globalThis.process.argv ? globalThis.process.argv : [];
 const PORT = Number(PROCESS_ENV.PORT || 4173);
+const HOST = PROCESS_ENV.HOST || "0.0.0.0";
 const SHOULD_RESET = PROCESS_ARGS.includes("--reset-db");
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
-const TOKEN_BYTES = 32;
-const scrypt = promisify(scryptCallback);
+const { evaluateFraudRules } = globalThis.crmFraudEngine;
+const { FRAUD_TEXT_RULES } = globalThis.crmFraudEngine;
+const { evaluateRecommendations } = globalThis.crmRecommendationEngine;
 const sessions = new Map();
 const EDIT_PERMISSION_SEEDS = {
-  admin: ["edit_leads", "edit_bank_notes", "edit_meetings", "edit_customers", "edit_offers", "edit_businesses", "edit_employees"],
-  banker: ["edit_leads", "edit_bank_notes", "edit_meetings", "edit_customers", "edit_businesses"],
-  wealth: ["edit_bank_notes", "edit_meetings", "edit_customers"],
-  loans: ["edit_leads", "edit_bank_notes", "edit_meetings", "edit_customers", "edit_businesses"],
+  admin: ["edit_leads", "edit_bank_notes", "edit_meetings", "edit_customers", "edit_offers", "edit_businesses", "edit_employees", "view_wealth_profile", "edit_wealth_profile", "manage_wealth_notes", "view_lending_profile", "edit_lending_profile", "manage_lending_notes", "manage_fraud_notes"],
+  banker: ["edit_leads", "edit_bank_notes", "edit_meetings", "edit_customers", "edit_businesses", "view_lending_profile"],
+  wealth: ["edit_bank_notes", "edit_meetings", "edit_customers", "view_wealth_profile", "edit_wealth_profile", "manage_wealth_notes"],
+  loans: ["edit_leads", "edit_bank_notes", "edit_meetings", "edit_customers", "edit_businesses", "view_lending_profile", "edit_lending_profile", "manage_lending_notes"],
+  fraud: ["manage_fraud_notes"],
   marketing: ["edit_offers"],
   hr: ["edit_employees"]
 };
+const DEMO_LOGIN_USERS = [
+  { username: "Aung", firstName: "Aung", email: "admin.crm.demo@gmail.com", role: "admin" },
+  { username: "Abby", firstName: "Abby", email: "admin.abby.crm.demo@gmail.com", role: "admin", passwordSourceEmail: "admin.crm.demo@gmail.com" },
+  { username: "Lizzie", firstName: "Lizzie", email: "hr.crm.demo@gmail.com", role: "hr" },
+  { username: "Sydney", firstName: "Sydney", email: "hr.sydney.crm.demo@gmail.com", role: "hr", passwordSourceEmail: "hr.crm.demo@gmail.com" },
+  { username: "Nora Whitfield", firstName: "Nora", email: "banker.crm.demo@gmail.com", role: "banker" },
+  { username: "Luke", firstName: "Luke", email: "wealth.crm.demo@gmail.com", role: "wealth" },
+  { username: "Preston", firstName: "Preston", email: "fraud.crm.demo@gmail.com", role: "fraud" },
+  { username: "Gavin", firstName: "Gavin", email: "loans.crm.demo@gmail.com", role: "loans" },
+  { username: "Alex", firstName: "Alex", email: "marketing.crm.demo@gmail.com", role: "marketing" }
+];
+const DEMO_EMPLOYEE_RECORDS = [
+  ["EMP-1000", "Aung", "admin.crm.demo@gmail.com", "Administration", "CRM Admin", "Corporate Office", "Board Oversight", "Full CRM administration", "Active", "06/01/2024", "Current", "Admin test account", ""],
+  ["EMP-1001", "Lizzie", "hr.crm.demo@gmail.com", "Human Resources", "HR Business Partner", "Corporate Office", "Aung", "Employee records and access readiness", "Active", "08/14/2019", "Current", "No outside business relationship on file", ""],
+  ["EMP-1003", "Preston", "fraud.crm.demo@gmail.com", "Fraud Team", "Fraud Analyst", "Operations Center", "Aung", "Fraud matrix and case investigation", "Active", "11/09/2020", "Fraud access recertification pending", "No outside business relationship on file", ""],
+  ["EMP-1004", "Gavin", "loans.crm.demo@gmail.com", "Loans and Mortgage", "Loan Specialist", "Carmel", "Victor Hale", "Lending pipeline and loan review", "Active", "04/18/2021", "Lending role onboarding current", "Outside business account disclosed", "BUS-9005"],
+  ["EMP-1005", "Alex", "marketing.crm.demo@gmail.com", "Marketing", "Campaign Manager", "Corporate Office", "Aung", "Aggregated campaign and segment data", "Active", "06/22/2022", "Privacy training scheduled", "No outside business relationship on file", ""],
+  ["EMP-1006", "Luke", "wealth.crm.demo@gmail.com", "Wealth Management", "Wealth Advisor", "Indianapolis Downtown", "Aung", "Wealth client profile and investment portfolio", "Active", "09/12/2018", "Current", "No outside business relationship on file", ""],
+  ["EMP-1008", "Sydney", "hr.sydney.crm.demo@gmail.com", "Human Resources", "HR Specialist", "Corporate Office", "Aung", "Employee records and access readiness", "Active", "03/11/2024", "Current", "HR test account", ""],
+  ["EMP-1009", "Abby", "admin.abby.crm.demo@gmail.com", "Administration", "CRM Admin", "Corporate Office", "Board Oversight", "Full CRM administration", "Active", "06/01/2024", "Current", "Admin test account", ""]
+];
 
 initializeDatabase(SHOULD_RESET);
 
 const db = new DatabaseSync(DB_PATH);
 const AUTHENTICATED_ROLES = ["admin", "hr", "banker", "wealth", "fraud", "loans", "marketing"];
 ensureEditPermissions();
+ensureDepartmentTables();
+ensureDemoLoginUsers();
+ensureRegularCustomerExpansion();
+ensureHouseholdWealthProfiles();
+ensureLendingProfilesForLoanCustomers();
 
 const server = createServer((request, response) => {
   const requestUrl = new URL(request.url, `http://${request.headers.host}`);
@@ -44,8 +83,9 @@ const server = createServer((request, response) => {
   serveStaticFile(requestUrl, response);
 });
 
-server.listen(PORT, () => {
-  console.log(`CRM prototype running at http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  const shownHost = HOST === "0.0.0.0" ? "localhost" : HOST;
+  console.log(`CRM prototype running at http://${shownHost}:${PORT}`);
   console.log("SQLite database:", DB_PATH);
 });
 
@@ -77,35 +117,831 @@ function ensureEditPermissions() {
   });
 }
 
+function ensureDemoLoginUsers() {
+  DEMO_LOGIN_USERS.forEach((demoUser) => {
+    db.prepare(`
+      UPDATE role_test_users
+      SET name = ?, first_name = ?, email = ?
+      WHERE role = ?
+    `).run(demoUser.username, demoUser.firstName, demoUser.email, demoUser.role);
+
+    const passwordSource = db.prepare(`
+      SELECT password_hash, password_salt
+      FROM users
+      WHERE lower(email) = lower(?)
+      LIMIT 1
+    `).get(demoUser.passwordSourceEmail || demoUser.email);
+
+    if (!passwordSource) {
+      return;
+    }
+
+    const existing = db.prepare("SELECT user_id FROM users WHERE lower(email) = lower(?) LIMIT 1").get(demoUser.email);
+
+    if (existing) {
+      db.prepare(`
+        UPDATE users
+        SET username = ?, role = ?, password_hash = ?, password_salt = ?, is_active = 1
+        WHERE user_id = ?
+      `).run(demoUser.username, demoUser.role, passwordSource.password_hash, passwordSource.password_salt, existing.user_id);
+      return;
+    }
+
+    db.prepare(`
+      INSERT INTO users (username, email, password_hash, password_salt, role, is_active)
+      VALUES (?, ?, ?, ?, ?, 1)
+    `).run(demoUser.username, demoUser.email, passwordSource.password_hash, passwordSource.password_salt, demoUser.role);
+  });
+
+  ensureDemoEmployeeRecords();
+}
+
+function ensureDemoEmployeeRecords() {
+  DEMO_EMPLOYEE_RECORDS.forEach((employee) => {
+    const existing = db.prepare("SELECT employee_id FROM employees WHERE employee_id = ? LIMIT 1").get(employee[0]);
+
+    if (existing) {
+      db.prepare(`
+        UPDATE employees
+        SET
+          name = ?,
+          email = ?,
+          department = ?,
+          employee_role = ?,
+          branch = ?,
+          manager = ?,
+          access_level = ?,
+          status = ?,
+          hire_date = ?,
+          training_status = ?,
+          disclosures = ?,
+          linked_business_id = ?
+        WHERE employee_id = ?
+      `).run(...employee.slice(1), employee[0]);
+      return;
+    }
+
+    db.prepare(`
+      INSERT INTO employees (employee_id, name, email, department, employee_role, branch, manager, access_level, status, hire_date, training_status, disclosures, linked_business_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(...employee);
+  });
+
+  db.prepare("UPDATE business_records SET owner_name = ? WHERE business_id = ?").run("Gavin", "BUS-9005");
+  db.prepare("UPDATE customers SET wealth_advisor = ? WHERE wealth_advisor = ?").run("Luke", "Avery Chen");
+  db.prepare("UPDATE customer_notes SET author = ? WHERE author = ?").run("Luke", "Avery Chen");
+  db.prepare("UPDATE wealth_interactions SET owner = ? WHERE owner = ?").run("Luke", "Avery Chen");
+  db.prepare("UPDATE lending_contact_history SET owner = ? WHERE owner = ?").run("Gavin", "Taylor Brooks");
+}
+
+function ensureRegularCustomerExpansion() {
+  const regularCustomers = [
+    {
+      core: ["10310422", "Ava Brooks", "000-12-1011", "CIF-3104220", "06/08/1989", "46220", "4 years", "1182 Keystone Ave, Indianapolis, IN 46220", "317-555-0122", "ava.brooks@example.com", "Broad Ripple", "Nora Whitfield", "Not assigned", 6420, 51820, 58240, 0, 1, 24, "Low", 0, 1, "05/18/2026"],
+      profitability: ["Medium", 640, "Growing deposits and active digital banking", "New mortgage interest may create future lending conversation"],
+      accounts: [
+        ["Everyday Checking", "10310422", "Open", "08/14/2022", 6420],
+        ["Statement Savings", "20310422", "Open", "08/14/2022", 51820]
+      ],
+      members: [
+        ["Ava Brooks", "Primary", "Checking, Savings"]
+      ],
+      businessAccounts: [],
+      fraudHistory: [
+        ["Account Takeover", 0, 0],
+        ["Card Fraud", 0, 0],
+        ["Suspicious Login", 1, 7],
+        ["Phishing Concern", 0, 0]
+      ],
+      fraudDrivers: ["Low fraud exposure", "One routine device verification"],
+      discoverNeeds: [
+        ["First Home Savings Review", "Medium", "Savings balance is growing and client has asked about home buying timelines.", "Ask about down payment target and home purchase window.", "Discovery needed"],
+        ["High Yield Savings Education", "Low", "Client keeps most relationship value in savings.", "Review savings goals and liquidity needs.", "Optional discussion"]
+      ],
+      nextBestAction: ["Ask about first home goals", "Medium", "Deposit growth suggests a home purchase conversation may be useful.", "Nora Whitfield", "06/24/2026"],
+      alerts: [
+        ["First home savings signal", "Opportunity"],
+        ["Routine device verification", "Service"]
+      ],
+      notes: [
+        ["Nora Whitfield", "05/18/2026", "Client mentioned saving for a possible first home within two years."]
+      ],
+      loans: []
+    },
+    {
+      core: ["10344891", "Carlos Vega", "000-12-1012", "CIF-3448910", "12/11/1982", "46227", "6 years", "4420 Madison Ave, Indianapolis, IN 46227", "317-555-0191", "carlos.vega@example.com", "Southport", "Maya Thompson", "Not assigned", 12890, 60600, 73490, 0, 1, 36, "Low", 0, 2, "05/19/2026"],
+      profitability: ["Medium", 980, "Deposit relationship and small business service potential", "Business cash flow is seasonal"],
+      accounts: [
+        ["Everyday Checking", "10344891", "Open", "03/02/2020", 12890],
+        ["Statement Savings", "20344891", "Open", "03/02/2020", 60600]
+      ],
+      members: [
+        ["Carlos Vega", "Primary", "Checking, Savings, Business"]
+      ],
+      businessAccounts: [
+        ["Vega Auto Detail", "Owner", "Business Checking", 22500]
+      ],
+      fraudHistory: [
+        ["Account Takeover", 0, 0],
+        ["Card Fraud", 1, 11],
+        ["Suspicious Login", 1, 8],
+        ["Phishing Concern", 0, 0]
+      ],
+      fraudDrivers: ["Card replacement completed", "Business deposits vary by season"],
+      discoverNeeds: [
+        ["Business Line of Credit", "Medium", "Small business relationship may need flexible cash flow support.", "Ask about seasonal inventory and receivables timing.", "Needs lending review"],
+        ["Merchant Services", "Low", "Business checking relationship does not yet show payment processing products.", "Ask how customers pay for services today.", "Discovery needed"]
+      ],
+      nextBestAction: ["Review business cash flow needs", "Medium", "Business relationship may benefit from working capital and merchant services.", "Maya Thompson", "06/18/2026"],
+      alerts: [
+        ["Business owner relationship", "Business"],
+        ["Line of credit opportunity", "Lending"]
+      ],
+      notes: [
+        ["Maya Thompson", "05/19/2026", "Client asked about separating business expenses from personal checking."]
+      ],
+      loans: [
+        ["Business Line", 15000, "Current", "Next due 06/26/2026"]
+      ]
+    },
+    {
+      core: ["10378215", "Hannah Ellis", "000-12-1013", "CIF-3782150", "04/23/1994", "46032", "2 years", "771 Oak Ridge Dr, Carmel, IN 46032", "317-555-0185", "hannah.ellis@example.com", "Carmel", "Caleb Martin", "Not assigned", 8420, 32800, 41220, 0, 1, 29, "Low", 0, 1, "05/17/2026"],
+      profitability: ["Low", 410, "Starter relationship with credit card activity", "Help build savings and avoid revolving debt growth"],
+      accounts: [
+        ["Student-to-Everyday Checking", "10378215", "Open", "01/05/2024", 8420],
+        ["Statement Savings", "20378215", "Open", "01/05/2024", 32800],
+        ["Rewards Credit Card", "40378215", "Active", "02/15/2024", 1850]
+      ],
+      members: [
+        ["Hannah Ellis", "Primary", "Checking, Savings, Credit Card"]
+      ],
+      businessAccounts: [],
+      fraudHistory: [
+        ["Account Takeover", 0, 0],
+        ["Card Fraud", 0, 0],
+        ["Suspicious Login", 1, 7],
+        ["Phishing Concern", 1, 6]
+      ],
+      fraudDrivers: ["Newer digital user", "Phishing education completed"],
+      discoverNeeds: [
+        ["Credit Builder Review", "Medium", "Client has a newer credit card and may benefit from usage and autopay guidance.", "Discuss credit score goals and monthly payment habits.", "Ready for outreach"],
+        ["Emergency Savings Plan", "Low", "Savings balance is healthy for a starter relationship but goals are not documented.", "Ask about target reserve and upcoming expenses.", "Discovery needed"]
+      ],
+      nextBestAction: ["Complete credit builder review", "Medium", "Client has a newer card and could benefit from proactive education.", "Caleb Martin", "06/27/2026"],
+      alerts: [
+        ["Newer card relationship", "Opportunity"],
+        ["Phishing education completed", "Service"]
+      ],
+      notes: [
+        ["Caleb Martin", "05/17/2026", "Client asked how credit utilization affects score."]
+      ],
+      loans: [
+        ["Credit Card", 1850, "Active", "Minimum due 06/20/2026"]
+      ]
+    },
+    {
+      core: ["10402673", "Ben Carter", "000-12-1014", "CIF-4026730", "09/02/1979", "46038", "11 years", "305 Lantern Rd, Fishers, IN 46038", "317-555-0167", "ben.carter@example.com", "Fishers", "Nora Whitfield", "Not assigned", 17600, 78900, 96500, 0, 2, 41, "Medium", 0, 2, "05/25/2026"],
+      profitability: ["Medium", 1320, "Deposit balances and mortgage relationship", "Near wealth threshold but remains regular banking under household policy"],
+      accounts: [
+        ["Premier Checking", "10402673", "Open", "06/12/2015", 17600],
+        ["Money Market Savings", "20402673", "Open", "06/12/2015", 78900]
+      ],
+      members: [
+        ["Ben Carter", "Primary", "Checking, Savings, Mortgage"],
+        ["Mia Carter", "Spouse", "Joint Savings"]
+      ],
+      businessAccounts: [],
+      fraudHistory: [
+        ["Account Takeover", 0, 0],
+        ["Card Fraud", 1, 12],
+        ["Suspicious Login", 1, 9],
+        ["Phishing Concern", 1, 8]
+      ],
+      fraudDrivers: ["Moderate digital risk", "Recent card dispute resolved"],
+      discoverNeeds: [
+        ["Mortgage Refinance Review", "Medium", "Mortgage relationship and stable deposit balances could support a rate review.", "Ask about current home plans and payment comfort.", "Needs lending review"],
+        ["Savings Goal Review", "Low", "Household balance is close to the wealth threshold but no investment relationship is assigned.", "Document goals before any wealth referral.", "Discovery needed"]
+      ],
+      nextBestAction: ["Review mortgage and savings goals", "Medium", "Client is near the wealth threshold and has a mortgage relationship.", "Nora Whitfield", "06/19/2026"],
+      alerts: [
+        ["Near wealth threshold", "Opportunity"],
+        ["Mortgage review available", "Lending"]
+      ],
+      notes: [
+        ["Nora Whitfield", "05/25/2026", "Client asked whether extra monthly mortgage payments would help long term."]
+      ],
+      loans: [
+        ["Mortgage", 124500, "Current", "Next due 07/01/2026"]
+      ]
+    },
+    {
+      core: ["10433908", "Nina Patel", "000-12-1015", "CIF-4339080", "01/30/1991", "46236", "3 years", "9902 Geist Pointe Dr, Indianapolis, IN 46236", "317-555-0138", "nina.patel@example.com", "Geist", "Maya Thompson", "Not assigned", 3860, 24700, 28560, 0, 1, 18, "Low", 0, 0, "05/13/2026"],
+      profitability: ["Low", 360, "Digital-first checking and savings relationship", "Limited product depth"],
+      accounts: [
+        ["Everyday Checking", "10433908", "Open", "09/10/2023", 3860],
+        ["Statement Savings", "20433908", "Open", "09/10/2023", 24700]
+      ],
+      members: [
+        ["Nina Patel", "Primary", "Checking, Savings"]
+      ],
+      businessAccounts: [],
+      fraudHistory: [
+        ["Account Takeover", 0, 0],
+        ["Card Fraud", 0, 0],
+        ["Suspicious Login", 0, 0],
+        ["Phishing Concern", 0, 0]
+      ],
+      fraudDrivers: ["No recent fraud indicators", "Low transaction exposure"],
+      discoverNeeds: [
+        ["Direct Deposit Review", "Low", "Client is digital-first and may benefit from deeper primary bank setup.", "Ask if paycheck or recurring deposits are connected.", "Optional discussion"],
+        ["Savings Habit Builder", "Low", "Savings relationship is active but goals are undocumented.", "Offer automated savings setup if useful.", "Optional discussion"]
+      ],
+      nextBestAction: ["Ask about direct deposit setup", "Low", "Client may be using the bank as a secondary relationship.", "Maya Thompson", "06/29/2026"],
+      alerts: [
+        ["Digital-first relationship", "Service"],
+        ["Low product depth", "Opportunity"]
+      ],
+      notes: [
+        ["Contact Center", "05/13/2026", "Client asked about automated savings transfers."]
+      ],
+      loans: []
+    }
+  ];
+
+  regularCustomers.forEach((customer) => {
+    db.prepare(`
+      INSERT OR IGNORE INTO customers (
+        account_number, name, ssn, cif, dob, zip, relationship, address, phone, email,
+        primary_branch, personal_banker, wealth_advisor, checking_balance, savings_balance,
+        household_balance, invested_balance, affluency_tier, fraud_risk_score,
+        fraud_risk_tier, fraud_cases, frontline_notes, last_reviewed
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(...customer.core);
+
+    const accountNumber = customer.core[0];
+    db.prepare(`
+      INSERT OR IGNORE INTO customer_profitability (account_number, tier, annual_contribution, main_driver, watch_item)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(accountNumber, ...customer.profitability);
+
+    insertAccountRowsIfMissing("customer_accounts", accountNumber, `
+      INSERT INTO customer_accounts (account_number, product_type, product_account, status, open_date, balance, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, customer.accounts);
+    insertAccountRowsIfMissing("household_members", accountNumber, `
+      INSERT INTO household_members (account_number, member_name, relationship, products, sort_order)
+      VALUES (?, ?, ?, ?, ?)
+    `, customer.members);
+    insertAccountRowsIfMissing("customer_business_accounts", accountNumber, `
+      INSERT INTO customer_business_accounts (account_number, business_name, owner_role, products, relationship_value, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `, customer.businessAccounts);
+    insertAccountRowsIfMissing("fraud_history", accountNumber, `
+      INSERT INTO fraud_history (account_number, fraud_type, event_count, impact, sort_order)
+      VALUES (?, ?, ?, ?, ?)
+    `, customer.fraudHistory);
+    insertAccountRowsIfMissing("fraud_drivers", accountNumber, `
+      INSERT INTO fraud_drivers (account_number, driver, sort_order)
+      VALUES (?, ?, ?)
+    `, customer.fraudDrivers.map((driver) => [driver]));
+    insertAccountRowsIfMissing("discover_needs", accountNumber, `
+      INSERT INTO discover_needs (account_number, product, priority, reason, next_action, status, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `, customer.discoverNeeds);
+    insertAccountRowsIfMissing("customer_alerts", accountNumber, `
+      INSERT INTO customer_alerts (account_number, label, alert_type, sort_order)
+      VALUES (?, ?, ?, ?)
+    `, customer.alerts);
+    insertAccountRowsIfMissing("customer_notes", accountNumber, `
+      INSERT INTO customer_notes (account_number, author, note_date, note_text, sort_order)
+      VALUES (?, ?, ?, ?, ?)
+    `, customer.notes);
+    insertAccountRowsIfMissing("loans", accountNumber, `
+      INSERT INTO loans (account_number, loan_type, balance, status, payment_status, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `, customer.loans);
+
+    db.prepare(`
+      INSERT OR IGNORE INTO next_best_actions (account_number, title, priority, reason, banker, due)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(accountNumber, ...customer.nextBestAction);
+  });
+}
+
+function ensureHouseholdWealthProfiles() {
+  const wealthCustomers = db.prepare("SELECT account_number FROM customers WHERE household_balance > 100000 ORDER BY account_number").all()
+    .map((row) => getCustomerRecord(row.account_number))
+    .filter(Boolean);
+
+  wealthCustomers.forEach((customer) => {
+    db.prepare(`
+      INSERT OR IGNORE INTO wealth_profiles (
+        account_number, risk_tolerance, liquidity_needs, time_horizon, tax_status,
+        other_investments, investment_experience, investment_objectives,
+        concentration_concerns, income_needs, last_meeting_date, last_call_date,
+        next_meeting_date, follow_up
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      customer.accountNumber,
+      customer.investedBalance > 500000 ? "Balanced" : "Moderate",
+      customer.savings > 100000 ? "Maintain strong cash reserve while reviewing investable excess." : "Maintain emergency reserve and document liquidity needs.",
+      customer.investedBalance > 500000 ? "5 to 7 years" : "7 to 10 years",
+      "Review with client and tax advisor during annual planning.",
+      customer.investedBalance > 0 ? "Bank-managed or outside investment relationship noted." : "Outside investments not documented.",
+      customer.affluencyTier >= 3 ? "Intermediate" : "Beginner",
+      customer.discoverNeeds.find((need) => /wealth|investment|cd|income/i.test(need.product))?.reason || "Document goals, risk comfort, liquidity needs, and time horizon.",
+      customer.savings > customer.investedBalance ? "High deposit concentration; consider gradual diversification." : "Review portfolio concentration at next meeting.",
+      customer.relationship.includes("20") || customer.relationship.includes("29") ? "Income planning should be reviewed annually." : "No immediate income draw documented.",
+      customer.notes[0]?.date || "Not documented",
+      customer.lastReviewed || "Not documented",
+      customer.nextBestAction?.due || "Needs scheduling",
+      customer.nextBestAction?.reason || "Schedule next wealth planning touchpoint."
+    );
+
+    if (db.prepare("SELECT COUNT(*) AS total FROM wealth_accounts WHERE account_number = ?").get(customer.accountNumber).total === 0) {
+      const wealthAccounts = customer.accounts.map((account) => [
+        account.type.includes("CD") ? "SIS" : "Retail",
+        account.type,
+        account.account,
+        account.balance,
+        account.status
+      ]);
+
+      if (customer.investedBalance > 0) {
+        wealthAccounts.push(["STAR Full Picture", "Investment Portfolio", `STAR-${customer.accountNumber.slice(-5)}`, customer.investedBalance, "Active"]);
+      }
+
+      wealthAccounts.forEach((account, index) => {
+        db.prepare(`
+          INSERT INTO wealth_accounts (account_number, account_group, account_name, account_id, balance, status, sort_order)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).run(customer.accountNumber, ...account, index + 1);
+      });
+    }
+
+    if (db.prepare("SELECT COUNT(*) AS total FROM wealth_life_events WHERE account_number = ?").get(customer.accountNumber).total === 0) {
+      [
+        ["Annual wealth review", customer.nextBestAction?.due || "06/30/2026", "1 month prior", customer.nextBestAction?.reason || "Prepare annual wealth review."],
+        ["Life event check-in", "Next client meeting", "1 month prior", "Ask about retirement, income, home, family, and business changes."]
+      ].forEach((event, index) => {
+        db.prepare(`
+          INSERT INTO wealth_life_events (account_number, event_title, event_date, alert_date, note_text, sort_order)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).run(customer.accountNumber, ...event, index + 1);
+      });
+    }
+
+    if (db.prepare("SELECT COUNT(*) AS total FROM wealth_interactions WHERE account_number = ?").get(customer.accountNumber).total === 0) {
+      const interactions = (customer.notes || []).slice(0, 2).map((note, index) => [
+        index === 0 ? "Meeting" : "Call",
+        note.date,
+        note.author,
+        note.text,
+        0
+      ]);
+
+      if (interactions.length === 0) {
+        interactions.push(["Meeting", customer.lastReviewed || "Not documented", customer.wealthAdvisor || "Wealth Team", "Initial wealth profile review needed.", 0]);
+      }
+
+      interactions.forEach((interaction, index) => {
+        db.prepare(`
+          INSERT INTO wealth_interactions (account_number, interaction_type, interaction_date, owner, note_text, is_user_created, sort_order)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).run(customer.accountNumber, ...interaction, index + 1);
+      });
+    }
+  });
+}
+
+function ensureLendingProfilesForLoanCustomers() {
+  const lendingCustomers = db.prepare("SELECT DISTINCT account_number FROM loans ORDER BY account_number").all()
+    .map((row) => getCustomerRecord(row.account_number))
+    .filter(Boolean);
+
+  lendingCustomers.forEach((customer, profileIndex) => {
+    const totalLoans = getLoanBalance(customer);
+    const hasMortgage = customer.loans.some((loan) => /mortgage|home|heloc/i.test(loan.type));
+    const hasCard = customer.loans.some((loan) => /card/i.test(loan.type));
+    const monthlyPayment = Math.max(90, Math.round(totalLoans * 0.008));
+
+    db.prepare(`
+      INSERT OR IGNORE INTO lending_profiles (
+        account_number, loan_status, interest_rate, monthly_payment, yearly_payment,
+        monthly_income, pmi_status, pmi_recommendation, home_equity, heloc_status,
+        bill_amount_owed, past_due_amount, maturity_date, closing_status,
+        split_payment_structure, credit_score, available_loan_products
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      customer.accountNumber,
+      customer.loans.some((loan) => loan.status === "Current") ? "Active" : customer.loans[0]?.status || "Review",
+      hasCard ? "18.99%" : "7.25%",
+      monthlyPayment,
+      monthlyPayment * 12,
+      Math.max(4200, Math.round(customer.household / 42)),
+      hasMortgage ? "Review required" : "Not applicable",
+      hasMortgage ? "Review PMI eligibility with current home value and loan-to-value." : "No PMI required for this lending product.",
+      hasMortgage ? Math.max(35000, Math.round(customer.household * 0.22)) : 0,
+      hasMortgage ? "Potential HELOC conversation available" : "Not currently eligible based on profile data",
+      totalLoans,
+      customer.fraudRiskScore > 65 ? 240 : 0,
+      "Review in lending system",
+      "Closed",
+      customer.loans.length > 1 ? "Multiple monthly payments; consolidation review available." : "Standard monthly payment.",
+      Math.max(620, 780 - customer.fraudRiskScore),
+      customer.discoverNeeds.filter((need) => /loan|mortgage|equity|heloc|credit/i.test(need.product)).map((need) => need.product).join(", ") || "Personal loan review, credit review"
+    );
+
+    if (db.prepare("SELECT COUNT(*) AS total FROM lending_documents WHERE account_number = ?").get(customer.accountNumber).total === 0) {
+      [
+        ["W2 / income verification", profileIndex % 3 === 0 ? "Needs refresh" : "On file", "05/20/2026"],
+        ["Paystubs", "On file", "05/27/2026"],
+        ["Employment verification", profileIndex % 2 === 0 ? "Verified" : "Pending lender review", "05/28/2026"],
+        ["Credit score tracking", "Updated", "06/01/2026"]
+      ].forEach((document, documentIndex) => {
+        db.prepare(`
+          INSERT INTO lending_documents (account_number, document_name, document_status, last_updated, sort_order)
+          VALUES (?, ?, ?, ?, ?)
+        `).run(customer.accountNumber, ...document, documentIndex + 1);
+      });
+    }
+
+    if (db.prepare("SELECT COUNT(*) AS total FROM lending_contact_history WHERE account_number = ?").get(customer.accountNumber).total === 0) {
+      const contacts = (customer.notes || []).slice(0, 2).map((note, index) => [
+        index % 2 === 0 ? "Phone" : "Email",
+        note.date,
+        index % 2 === 0 ? customer.phone : customer.email,
+        "Gavin",
+        note.text,
+        0
+      ]);
+
+      if (contacts.length === 0) {
+        contacts.push(["Phone", customer.lastReviewed || "Not documented", customer.phone, "Gavin", "Initial lending contact review needed.", 0]);
+      }
+
+      contacts.forEach((contact, contactIndex) => {
+        db.prepare(`
+          INSERT INTO lending_contact_history (account_number, contact_type, contact_date, contact_value, owner, note_text, is_user_created, sort_order)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(customer.accountNumber, ...contact, contactIndex + 1);
+      });
+    }
+  });
+}
+
+function insertAccountRowsIfMissing(tableName, accountNumber, sql, rows) {
+  const safeTables = new Set([
+    "customer_accounts",
+    "household_members",
+    "customer_business_accounts",
+    "fraud_history",
+    "fraud_drivers",
+    "discover_needs",
+    "customer_alerts",
+    "customer_notes",
+    "loans"
+  ]);
+
+  if (!safeTables.has(tableName) || rows.length === 0) {
+    return;
+  }
+
+  const rowCount = db.prepare(`SELECT COUNT(*) AS total FROM ${tableName} WHERE account_number = ?`).get(accountNumber).total;
+
+  if (rowCount > 0) {
+    return;
+  }
+
+  rows.forEach((row, index) => {
+    db.prepare(sql).run(accountNumber, ...row, index + 1);
+  });
+}
+
+function ensureDepartmentTables() {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS wealth_profiles (
+      account_number TEXT PRIMARY KEY REFERENCES customers(account_number) ON DELETE CASCADE,
+      risk_tolerance TEXT NOT NULL,
+      liquidity_needs TEXT NOT NULL,
+      time_horizon TEXT NOT NULL,
+      tax_status TEXT NOT NULL,
+      other_investments TEXT NOT NULL,
+      investment_experience TEXT NOT NULL,
+      investment_objectives TEXT NOT NULL,
+      concentration_concerns TEXT NOT NULL,
+      income_needs TEXT NOT NULL,
+      last_meeting_date TEXT NOT NULL,
+      last_call_date TEXT NOT NULL,
+      next_meeting_date TEXT NOT NULL,
+      follow_up TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS fraud_notes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      account_number TEXT NOT NULL REFERENCES customers(account_number) ON DELETE CASCADE,
+      author TEXT NOT NULL,
+      note_date TEXT NOT NULL,
+      note_text TEXT NOT NULL,
+      sort_order INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS wealth_accounts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      account_number TEXT NOT NULL REFERENCES customers(account_number) ON DELETE CASCADE,
+      account_group TEXT NOT NULL,
+      account_name TEXT NOT NULL,
+      account_id TEXT NOT NULL,
+      balance INTEGER NOT NULL,
+      status TEXT NOT NULL,
+      sort_order INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS wealth_life_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      account_number TEXT NOT NULL REFERENCES customers(account_number) ON DELETE CASCADE,
+      event_title TEXT NOT NULL,
+      event_date TEXT NOT NULL,
+      alert_date TEXT NOT NULL,
+      note_text TEXT NOT NULL,
+      sort_order INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS wealth_interactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      account_number TEXT NOT NULL REFERENCES customers(account_number) ON DELETE CASCADE,
+      interaction_type TEXT NOT NULL,
+      interaction_date TEXT NOT NULL,
+      owner TEXT NOT NULL,
+      note_text TEXT NOT NULL,
+      is_user_created INTEGER NOT NULL DEFAULT 0,
+      sort_order INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS lending_profiles (
+      account_number TEXT PRIMARY KEY REFERENCES customers(account_number) ON DELETE CASCADE,
+      loan_status TEXT NOT NULL,
+      interest_rate TEXT NOT NULL,
+      monthly_payment INTEGER NOT NULL,
+      yearly_payment INTEGER NOT NULL,
+      monthly_income INTEGER NOT NULL,
+      pmi_status TEXT NOT NULL,
+      pmi_recommendation TEXT NOT NULL,
+      home_equity INTEGER NOT NULL,
+      heloc_status TEXT NOT NULL,
+      bill_amount_owed INTEGER NOT NULL,
+      past_due_amount INTEGER NOT NULL,
+      maturity_date TEXT NOT NULL,
+      closing_status TEXT NOT NULL,
+      split_payment_structure TEXT NOT NULL,
+      credit_score INTEGER NOT NULL,
+      available_loan_products TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS lending_documents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      account_number TEXT NOT NULL REFERENCES customers(account_number) ON DELETE CASCADE,
+      document_name TEXT NOT NULL,
+      document_status TEXT NOT NULL,
+      last_updated TEXT NOT NULL,
+      sort_order INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS lending_contact_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      account_number TEXT NOT NULL REFERENCES customers(account_number) ON DELETE CASCADE,
+      contact_type TEXT NOT NULL,
+      contact_date TEXT NOT NULL,
+      contact_value TEXT NOT NULL,
+      owner TEXT NOT NULL,
+      note_text TEXT NOT NULL,
+      is_user_created INTEGER NOT NULL DEFAULT 0,
+      sort_order INTEGER NOT NULL
+    );
+  `);
+
+  seedWealthDepartmentData();
+  seedLendingDepartmentData();
+}
+
+function seedWealthDepartmentData() {
+  const profiles = [
+    {
+      accountNumber: "10024588",
+      riskTolerance: "Moderate",
+      liquidityNeeds: "Maintain 9 months of expenses and a CD ladder for planned home updates.",
+      timeHorizon: "7 to 10 years",
+      taxStatus: "Joint filer, tax-sensitive income planning",
+      otherInvestments: "Employer retirement plan and a small outside brokerage account",
+      experience: "Intermediate",
+      objectives: "Conservative growth, capital preservation, and retirement income planning",
+      concentration: "High cash and CD concentration; review diversification gradually.",
+      incomeNeeds: "No immediate income draw, future retirement income planning",
+      lastMeeting: "05/29/2026",
+      lastCall: "05/21/2026",
+      nextMeeting: "06/28/2026",
+      followUp: "Prepare conservative model portfolio and beneficiary/titling checklist."
+    },
+    {
+      accountNumber: "10058217",
+      riskTolerance: "Moderate growth",
+      liquidityNeeds: "Needs flexible liquidity for properties and tax payments.",
+      timeHorizon: "10+ years",
+      taxStatus: "Pass-through business income; coordinate with CPA",
+      otherInvestments: "Rental property equity and outside IRA",
+      experience: "Experienced",
+      objectives: "Diversification, business-owner liquidity, and retirement planning",
+      concentration: "Real estate concentration from Collins Properties LLC.",
+      incomeNeeds: "Occasional income needs for property expenses",
+      lastMeeting: "05/15/2026",
+      lastCall: "05/09/2026",
+      nextMeeting: "06/15/2026",
+      followUp: "Review HELOC timing with lending and map investable cash reserve."
+    },
+    {
+      accountNumber: "10090866",
+      riskTolerance: "Balanced",
+      liquidityNeeds: "Preserve high cash reserve while laddering maturities.",
+      timeHorizon: "5 to 7 years",
+      taxStatus: "Retirement income and estate review needed",
+      otherInvestments: "Outside 401(k), brokerage, and insurance policy",
+      experience: "Advanced",
+      objectives: "Income, estate preparation, and principal protection",
+      concentration: "Large CD and savings concentration; beneficiary review recommended.",
+      incomeNeeds: "Quarterly income review",
+      lastMeeting: "05/07/2026",
+      lastCall: "05/24/2026",
+      nextMeeting: "06/24/2026",
+      followUp: "Schedule annual wealth review and confirm beneficiary documents."
+    },
+    {
+      accountNumber: "10144520",
+      riskTolerance: "Growth",
+      liquidityNeeds: "Maintain business and household liquidity for construction cycles.",
+      timeHorizon: "10+ years",
+      taxStatus: "Business owner with seasonal income",
+      otherInvestments: "Business equity and SEP IRA",
+      experience: "Intermediate",
+      objectives: "Grow investable assets and separate business/personal reserves",
+      concentration: "Business ownership concentration; review risk spread.",
+      incomeNeeds: "No income draw; focus on growth and tax efficiency",
+      lastMeeting: "05/30/2026",
+      lastCall: "05/22/2026",
+      nextMeeting: "06/30/2026",
+      followUp: "Set joint treasury, wealth, and banker conversation."
+    }
+  ];
+
+  profiles.forEach((profile) => {
+    db.prepare(`
+      INSERT OR IGNORE INTO wealth_profiles (
+        account_number, risk_tolerance, liquidity_needs, time_horizon, tax_status,
+        other_investments, investment_experience, investment_objectives,
+        concentration_concerns, income_needs, last_meeting_date, last_call_date,
+        next_meeting_date, follow_up
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      profile.accountNumber,
+      profile.riskTolerance,
+      profile.liquidityNeeds,
+      profile.timeHorizon,
+      profile.taxStatus,
+      profile.otherInvestments,
+      profile.experience,
+      profile.objectives,
+      profile.concentration,
+      profile.incomeNeeds,
+      profile.lastMeeting,
+      profile.lastCall,
+      profile.nextMeeting,
+      profile.followUp
+    );
+  });
+
+  if (db.prepare("SELECT COUNT(*) AS total FROM wealth_accounts").get().total === 0) {
+    [
+      ["10024588", "Retail", "Premier Checking", "10024588", 24780, "Open"],
+      ["10024588", "STAR Full Picture", "Managed Advisory", "STAR-24588", 236520, "Active"],
+      ["10024588", "SIS", "12 Month CD", "SIS-24588", 63240, "Matures 09/2026"],
+      ["10058217", "Retail", "High Yield Savings", "20058217", 156900, "Open"],
+      ["10058217", "STAR Full Picture", "Model Portfolio", "STAR-58217", 188480, "Active"],
+      ["10058217", "SIS", "36 Month CD", "SIS-58217", 94000, "Matures 12/2027"],
+      ["10090866", "Retail", "Private Client Checking", "10090866", 44210, "Open"],
+      ["10090866", "STAR Full Picture", "Private Client Portfolio", "STAR-90866", 984220, "Active"],
+      ["10090866", "SIS", "Brokered CD", "SIS-90866", 263820, "Matures 03/2027"],
+      ["10144520", "Retail", "Premier Business Owner Checking", "10144520", 36100, "Open"],
+      ["10144520", "STAR Full Picture", "Business Owner Portfolio", "STAR-44520", 142300, "Active"],
+      ["10144520", "SIS", "Treasury Reserve", "SIS-44520", 78500, "Active"]
+    ].forEach((account, index) => {
+      db.prepare(`
+        INSERT INTO wealth_accounts (account_number, account_group, account_name, account_id, balance, status, sort_order)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(...account, index + 1);
+    });
+  }
+
+  if (db.prepare("SELECT COUNT(*) AS total FROM wealth_life_events").get().total === 0) {
+    [
+      ["10024588", "Home renovation planning", "07/28/2026", "06/28/2026", "Ask about cash needs before shifting more into investments."],
+      ["10024588", "Jordan Parker retirement review", "09/18/2026", "08/18/2026", "Review spouse retirement timing and beneficiary updates."],
+      ["10058217", "Property tax reserve", "07/15/2026", "06/15/2026", "Confirm liquidity for rental property tax payment."],
+      ["10058217", "HELOC renewal window", "08/12/2026", "07/12/2026", "Coordinate with lending one month before HELOC review."],
+      ["10090866", "CD maturity strategy", "03/02/2027", "02/02/2027", "Prepare reinvestment and income strategy options."],
+      ["10090866", "Annual estate review", "07/24/2026", "06/24/2026", "Collect beneficiary and titling questions before meeting."],
+      ["10144520", "Construction season cash review", "07/30/2026", "06/30/2026", "Discuss reserves before peak project disbursements."],
+      ["10144520", "SEP IRA funding check-in", "09/01/2026", "08/01/2026", "Coordinate tax-aware contribution planning."]
+    ].forEach((event, index) => {
+      db.prepare(`
+        INSERT INTO wealth_life_events (account_number, event_title, event_date, alert_date, note_text, sort_order)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(...event, index + 1);
+    });
+  }
+
+  if (db.prepare("SELECT COUNT(*) AS total FROM wealth_interactions").get().total === 0) {
+    [
+      ["10024588", "Meeting", "05/29/2026", "Luke", "Discussed conservative investment options and CD maturity timing.", 0],
+      ["10024588", "Call", "05/21/2026", "Nora Whitfield", "Client asked for a simple explanation of managed portfolios.", 0],
+      ["10058217", "Meeting", "05/15/2026", "Victor Hale", "Reviewed liquidity preference and business-owner risk concentration.", 0],
+      ["10058217", "Call", "05/09/2026", "Iris Bennett", "Confirmed preference for in-branch planning conversation.", 0],
+      ["10090866", "Meeting", "05/07/2026", "Leah Sullivan", "Reviewed CD reinvestment timing and quarterly income comfort.", 0],
+      ["10090866", "Call", "05/24/2026", "Leah Sullivan", "Left message to schedule annual beneficiary review.", 0],
+      ["10144520", "Meeting", "05/30/2026", "Luke", "Discussed separating business reserves from investable household funds.", 0],
+      ["10144520", "Call", "05/22/2026", "Nora Whitfield", "Client is open to a joint treasury and wealth meeting.", 0]
+    ].forEach((interaction, index) => {
+      db.prepare(`
+        INSERT INTO wealth_interactions (account_number, interaction_type, interaction_date, owner, note_text, is_user_created, sort_order)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(...interaction, index + 1);
+    });
+  }
+}
+
+function seedLendingDepartmentData() {
+  const profiles = [
+    ["10024588", "Active mortgage", "6.10%", 2140, 25680, 11800, "Not required", "PMI not required based on equity position.", 126000, "Eligible for HELOC review", 221400, 0, "04/12/2043", "Closed", "Single monthly mortgage payment", 742, "HELOC, mortgage refinance, home equity review"],
+    ["10031942", "Active personal loan", "8.40%", 315, 3780, 6200, "Not applicable", "No PMI; consumer loan review only.", 0, "Not eligible until mortgage data is available", 9800, 0, "01/15/2029", "Closed", "Standard monthly payment", 698, "Personal loan refinance, debt consolidation"],
+    ["10058217", "Active HELOC", "7.35%", 410, 4920, 14600, "Not required", "PMI not applicable; review draw period and property value.", 184000, "Existing HELOC; review limit and renewal timing", 43600, 0, "08/12/2031", "Closed", "Interest-only draw period", 768, "HELOC renewal, business line of credit"],
+    ["10077403", "Active credit card", "18.99%", 92, 1104, 5400, "Not applicable", "No PMI; starter lending education recommended.", 0, "Future home equity after mortgage application", 2140, 0, "10/09/2028", "Open revolving", "Minimum due monthly; encourage autopay", 704, "Starter credit education, future mortgage prequalification"],
+    ["10112679", "Active mortgage and personal loan", "6.75%", 1880, 22560, 7800, "PMI active", "Review PMI removal once loan-to-value is under 80%.", 69000, "Potential HELOC after fraud-safe review", 188600, 240, "11/02/2041", "Closed", "Mortgage plus personal loan; review debt consolidation", 662, "Debt consolidation, PMI removal review, refinance review"],
+    ["10144520", "Active business loan", "7.90%", 2680, 32160, 18500, "Not applicable", "Business lending; no PMI.", 98000, "Eligible for owner-occupied collateral discussion", 168000, 0, "02/20/2036", "Closed", "Business loan with seasonal principal curtailments", 731, "Business line of credit, equipment finance, treasury services"],
+    ["10188764", "Active equipment loan", "8.15%", 1240, 14880, 9300, "Not applicable", "Equipment loan; no PMI.", 42000, "HELOC not in scope for business equipment loan", 48600, 0, "06/16/2030", "Closed", "Monthly equipment payment; split pay available", 709, "Equipment refinance, business line of credit"],
+    ["10277455", "Active seasonal business note", "8.75%", 980, 11760, 7200, "Not applicable", "Business seasonal note; no PMI.", 36000, "Potential farm/property HELOC review", 38000, 0, "09/30/2028", "Closed", "Seasonal split payment after peak inventory", 688, "Seasonal line review, equipment finance"]
+  ];
+
+  profiles.forEach((profile) => {
+    db.prepare(`
+      INSERT OR IGNORE INTO lending_profiles (
+        account_number, loan_status, interest_rate, monthly_payment, yearly_payment,
+        monthly_income, pmi_status, pmi_recommendation, home_equity, heloc_status,
+        bill_amount_owed, past_due_amount, maturity_date, closing_status,
+        split_payment_structure, credit_score, available_loan_products
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(...profile);
+  });
+
+  if (db.prepare("SELECT COUNT(*) AS total FROM lending_documents").get().total === 0) {
+    profiles.forEach(([accountNumber], profileIndex) => {
+      [
+        ["W2 / income verification", profileIndex % 3 === 0 ? "Needs refresh" : "On file", "05/20/2026"],
+        ["Paystubs", "On file", "05/27/2026"],
+        ["Employment verification", profileIndex % 2 === 0 ? "Verified" : "Pending lender review", "05/28/2026"],
+        ["Credit score tracking", "Updated", "06/01/2026"]
+      ].forEach((document, documentIndex) => {
+        db.prepare(`
+          INSERT INTO lending_documents (account_number, document_name, document_status, last_updated, sort_order)
+          VALUES (?, ?, ?, ?, ?)
+        `).run(accountNumber, ...document, (profileIndex * 10) + documentIndex + 1);
+      });
+    });
+  }
+
+  if (db.prepare("SELECT COUNT(*) AS total FROM lending_contact_history").get().total === 0) {
+    [
+      ["10024588", "Phone", "05/30/2026", "317-555-0188", "Gavin", "Reviewed home equity conversation timing and monthly payment comfort.", 0],
+      ["10024588", "Email", "05/31/2026", "elise.parker@example.com", "Gavin", "Sent document checklist for optional HELOC review.", 0],
+      ["10031942", "Phone", "05/21/2026", "317-555-0142", "Caleb Martin", "Client asked about lowering personal loan payment.", 0],
+      ["10031942", "Email", "05/22/2026", "marcus.reed@example.com", "Gavin", "Requested updated income estimate for refinance review.", 0],
+      ["10058217", "Phone", "05/16/2026", "317-555-0103", "Gavin", "Discussed HELOC renewal and property cash reserve.", 0],
+      ["10112679", "Phone", "05/26/2026", "317-555-0126", "Sophia Ramirez", "Explained PMI review and past due catch-up options.", 0],
+      ["10144520", "Email", "05/30/2026", "grace.bennett@example.com", "Gavin", "Shared business line of credit preparation checklist.", 0],
+      ["10188764", "Phone", "05/29/2026", "317-555-0186", "Caleb Martin", "Reviewed equipment refinance interest rate and maturity date.", 0],
+      ["10277455", "Email", "05/28/2026", "robert.hayes@example.com", "Gavin", "Outlined seasonal split payment option before inventory build.", 0]
+    ].forEach((contact, index) => {
+      db.prepare(`
+        INSERT INTO lending_contact_history (account_number, contact_type, contact_date, contact_value, owner, note_text, is_user_created, sort_order)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(...contact, index + 1);
+    });
+  }
+}
+
 async function handleApi(request, requestUrl, response) {
   try {
     if (requestUrl.pathname === "/api/status") {
       sendJson(response, {
         source: "sqlite",
         database: "crm.sqlite"
-      });
-      return;
-    }
-
-    if (requestUrl.pathname === "/api/auth/login") {
-      if (request.method !== "POST") {
-        sendJson(response, { error: "Use POST to log in." }, 405);
-        return;
-      }
-
-      const payload = await readJsonBody(request);
-      const loginResult = await loginUser(payload);
-
-      if (!loginResult) {
-        sendJson(response, { error: "Invalid email or password." }, 401);
-        return;
-      }
-
-      sendJson(response, {
-        source: "sqlite",
-        token: loginResult.token,
-        user: loginResult.user,
-        permissions: loginResult.permissions
       });
       return;
     }
@@ -124,6 +960,73 @@ async function handleApi(request, requestUrl, response) {
         source: "sqlite",
         user: session.user,
         permissions: session.permissions
+      });
+      return;
+    }
+
+    const fraudAnalysisMatch = requestUrl.pathname.match(/^\/api\/fraud-analysis\/([^/]+)$/);
+
+    if (fraudAnalysisMatch) {
+      if (request.method !== "GET") {
+        sendJson(response, { error: "Use GET to open fraud analysis." }, 405);
+        return;
+      }
+
+      if (!hasAnyPermission(session, ["view_fraud_summary", "view_fraud_detail"])) {
+        sendRestricted(response, role, "fraud analysis");
+        return;
+      }
+
+      const accountNumber = decodeURIComponent(fraudAnalysisMatch[1]);
+      const customer = findCustomer("accountNumber", accountNumber);
+
+      if (!customer || !canAccessCustomer(session, customer)) {
+        sendRestricted(response, role, "this fraud analysis");
+        return;
+      }
+
+      const llmMatches = await classifyCustomerFraudNotes(customer);
+      const analysis = evaluateFraudRules(customer, llmMatches.length ? { llmMatches } : undefined);
+
+      sendJson(response, {
+        source: "sqlite",
+        role,
+        customer: {
+          accountNumber: customer.accountNumber,
+          name: customer.name
+        },
+        record: sanitizeFraudAnalysisForRole(analysis, role)
+      });
+      return;
+    }
+
+    const recommendationMatch = requestUrl.pathname.match(/^\/api\/recommendations\/([^/]+)$/);
+
+    if (recommendationMatch) {
+      if (request.method !== "GET") {
+        sendJson(response, { error: "Use GET to open recommendations." }, 405);
+        return;
+      }
+
+      if (!canViewRecommendations(session)) {
+        sendRestricted(response, role, "product recommendations");
+        return;
+      }
+
+      const accountNumber = decodeURIComponent(recommendationMatch[1]);
+      const customer = findCustomer("accountNumber", accountNumber);
+
+      if (!customer || !canAccessCustomer(session, customer)) {
+        sendRestricted(response, role, "this recommendation record");
+        return;
+      }
+
+      const analysis = evaluateRecommendations(customer, getRecommendationContext(accountNumber));
+
+      sendJson(response, {
+        source: "sqlite",
+        role,
+        record: filterRecommendationAnalysisForRole(analysis, role)
       });
       return;
     }
@@ -236,6 +1139,439 @@ async function handleApi(request, requestUrl, response) {
         source: "sqlite",
         role,
         ...getPagedMeetingsForAuth(session, requestUrl)
+      });
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/wealth/profile") {
+      if (request.method !== "GET") {
+        sendJson(response, { error: "Use GET to open wealth profiles." }, 405);
+        return;
+      }
+
+      if (!canViewWealthProfile(session)) {
+        sendRestricted(response, role, "wealth profile");
+        return;
+      }
+
+      const accountNumber = requestUrl.searchParams.get("accountNumber");
+      const customer = findCustomer("accountNumber", accountNumber);
+
+      if (!customer || !isWealthCustomer(customer) || !canAccessCustomer(session, customer)) {
+        sendRestricted(response, role, "this wealth profile");
+        return;
+      }
+
+      const profile = getWealthProfile(accountNumber);
+
+      if (!profile) {
+        sendJson(response, { source: "sqlite", role, record: null });
+        return;
+      }
+
+      sendJson(response, {
+        source: "sqlite",
+        role,
+        record: {
+          customer: sanitizeCustomerForRole(customer, role),
+          profile
+        }
+      });
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/wealth/profile/update") {
+      if (request.method !== "PUT") {
+        sendJson(response, { error: "Use PUT to update wealth profiles." }, 405);
+        return;
+      }
+
+      if (!canEditWealthProfile(session)) {
+        sendRestricted(response, role, "wealth profile editing");
+        return;
+      }
+
+      const payload = await readJsonBody(request);
+      const validation = validateWealthProfilePayload(payload);
+
+      if (!validation.valid) {
+        sendJson(response, {
+          error: "Wealth profile validation failed.",
+          fieldErrors: validation.fieldErrors
+        }, 400);
+        return;
+      }
+
+      const customer = findCustomer("accountNumber", validation.profile.accountNumber);
+
+      if (!customer || !isWealthCustomer(customer) || !canAccessCustomer(session, customer)) {
+        sendRestricted(response, role, "this wealth profile");
+        return;
+      }
+
+      const updatedProfile = updateWealthProfile(validation.profile);
+
+      sendJson(response, {
+        source: "sqlite",
+        role,
+        record: updatedProfile,
+        message: "Wealth profile updated."
+      });
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/wealth/interactions/create") {
+      if (request.method !== "POST") {
+        sendJson(response, { error: "Use POST to add wealth interactions." }, 405);
+        return;
+      }
+
+      if (!canManageWealthNotes(session)) {
+        sendRestricted(response, role, "wealth interaction notes");
+        return;
+      }
+
+      const payload = await readJsonBody(request);
+      const validation = validateWealthInteractionPayload(payload);
+
+      if (!validation.valid) {
+        sendJson(response, {
+          error: "Wealth interaction validation failed.",
+          fieldErrors: validation.fieldErrors
+        }, 400);
+        return;
+      }
+
+      const customer = findCustomer("accountNumber", validation.interaction.accountNumber);
+
+      if (!customer || !isWealthCustomer(customer) || !canAccessCustomer(session, customer)) {
+        sendRestricted(response, role, "this wealth profile");
+        return;
+      }
+
+      const createdInteraction = createWealthInteraction(validation.interaction, session.user.username);
+
+      sendJson(response, {
+        source: "sqlite",
+        role,
+        record: createdInteraction,
+        message: "Wealth interaction saved."
+      }, 201);
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/wealth/interactions/update") {
+      if (request.method !== "PUT") {
+        sendJson(response, { error: "Use PUT to update wealth interactions." }, 405);
+        return;
+      }
+
+      if (!canManageWealthNotes(session)) {
+        sendRestricted(response, role, "wealth interaction editing");
+        return;
+      }
+
+      const payload = await readJsonBody(request);
+      const validation = validateWealthInteractionUpdatePayload(payload);
+
+      if (!validation.valid) {
+        sendJson(response, {
+          error: "Wealth interaction validation failed.",
+          fieldErrors: validation.fieldErrors
+        }, 400);
+        return;
+      }
+
+      const interaction = findWealthInteractionById(validation.interaction.id);
+      const customer = interaction ? findCustomer("accountNumber", interaction.accountNumber) : null;
+
+      if (!interaction || !interaction.userCreated) {
+        sendJson(response, { error: "Only interactions added through this prototype can be edited." }, 400);
+        return;
+      }
+
+      if (!customer || !isWealthCustomer(customer) || !canAccessCustomer(session, customer)) {
+        sendRestricted(response, role, "this wealth profile");
+        return;
+      }
+
+      const updatedInteraction = updateWealthInteraction(validation.interaction, interaction);
+
+      sendJson(response, {
+        source: "sqlite",
+        role,
+        record: updatedInteraction,
+        message: "Wealth interaction updated."
+      });
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/wealth/interactions/delete") {
+      if (request.method !== "DELETE") {
+        sendJson(response, { error: "Use DELETE to remove wealth interactions." }, 405);
+        return;
+      }
+
+      if (!canManageWealthNotes(session)) {
+        sendRestricted(response, role, "wealth interaction removal");
+        return;
+      }
+
+      const interactionId = Number(requestUrl.searchParams.get("id"));
+
+      if (!Number.isInteger(interactionId) || interactionId <= 0) {
+        sendJson(response, { error: "A valid interaction id is required." }, 400);
+        return;
+      }
+
+      const removed = deleteWealthInteraction(interactionId);
+
+      if (!removed) {
+        sendJson(response, { error: "Only interactions added through this prototype can be removed." }, 400);
+        return;
+      }
+
+      sendJson(response, {
+        source: "sqlite",
+        role,
+        message: "Wealth interaction removed."
+      });
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/lending/profile") {
+      if (request.method !== "GET") {
+        sendJson(response, { error: "Use GET to open lending profiles." }, 405);
+        return;
+      }
+
+      if (!canViewLendingProfile(session)) {
+        sendRestricted(response, role, "lending profile");
+        return;
+      }
+
+      const accountNumber = requestUrl.searchParams.get("accountNumber");
+      const customer = findCustomer("accountNumber", accountNumber);
+
+      if (!customer || !customer.loans.length || !canAccessCustomer(session, customer)) {
+        sendRestricted(response, role, "this lending profile");
+        return;
+      }
+
+      const profile = getLendingProfile(accountNumber);
+
+      if (!profile) {
+        sendJson(response, { source: "sqlite", role, record: null });
+        return;
+      }
+
+      sendJson(response, {
+        source: "sqlite",
+        role,
+        record: {
+          customer: sanitizeCustomerForRole(customer, role),
+          profile
+        }
+      });
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/lending/profile/update") {
+      if (request.method !== "PUT") {
+        sendJson(response, { error: "Use PUT to update lending profiles." }, 405);
+        return;
+      }
+
+      if (!canEditLendingProfile(session)) {
+        sendRestricted(response, role, "lending profile editing");
+        return;
+      }
+
+      const payload = await readJsonBody(request);
+      const validation = validateLendingProfilePayload(payload);
+
+      if (!validation.valid) {
+        sendJson(response, {
+          error: "Lending profile validation failed.",
+          fieldErrors: validation.fieldErrors
+        }, 400);
+        return;
+      }
+
+      const customer = findCustomer("accountNumber", validation.profile.accountNumber);
+
+      if (!customer || !customer.loans.length || !canAccessCustomer(session, customer)) {
+        sendRestricted(response, role, "this lending profile");
+        return;
+      }
+
+      const updatedProfile = updateLendingProfile(validation.profile);
+
+      sendJson(response, {
+        source: "sqlite",
+        role,
+        record: updatedProfile,
+        message: "Lending profile updated."
+      });
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/lending/documents/update") {
+      if (request.method !== "PUT") {
+        sendJson(response, { error: "Use PUT to update lending documents." }, 405);
+        return;
+      }
+
+      if (!canEditLendingProfile(session)) {
+        sendRestricted(response, role, "lending document editing");
+        return;
+      }
+
+      const payload = await readJsonBody(request);
+      const validation = validateLendingDocumentPayload(payload);
+
+      if (!validation.valid) {
+        sendJson(response, {
+          error: "Lending document validation failed.",
+          fieldErrors: validation.fieldErrors
+        }, 400);
+        return;
+      }
+
+      const document = findLendingDocumentById(validation.document.id);
+      const customer = document ? findCustomer("accountNumber", document.accountNumber) : null;
+
+      if (!document || !customer || !canAccessCustomer(session, customer)) {
+        sendRestricted(response, role, "this lending document");
+        return;
+      }
+
+      const updatedDocument = updateLendingDocument(validation.document);
+
+      sendJson(response, {
+        source: "sqlite",
+        role,
+        record: updatedDocument,
+        message: "Lending document updated."
+      });
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/lending/contact-history/create") {
+      if (request.method !== "POST") {
+        sendJson(response, { error: "Use POST to add lending contact notes." }, 405);
+        return;
+      }
+
+      if (!canManageLendingNotes(session)) {
+        sendRestricted(response, role, "lending contact notes");
+        return;
+      }
+
+      const payload = await readJsonBody(request);
+      const validation = validateLendingContactPayload(payload);
+
+      if (!validation.valid) {
+        sendJson(response, {
+          error: "Lending contact validation failed.",
+          fieldErrors: validation.fieldErrors
+        }, 400);
+        return;
+      }
+
+      const customer = findCustomer("accountNumber", validation.contact.accountNumber);
+
+      if (!customer || !customer.loans.length || !canAccessCustomer(session, customer)) {
+        sendRestricted(response, role, "this lending profile");
+        return;
+      }
+
+      const createdContact = createLendingContact(validation.contact, session.user.username);
+
+      sendJson(response, {
+        source: "sqlite",
+        role,
+        record: createdContact,
+        message: "Lending contact note saved."
+      }, 201);
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/lending/contact-history/update") {
+      if (request.method !== "PUT") {
+        sendJson(response, { error: "Use PUT to update lending contact notes." }, 405);
+        return;
+      }
+
+      if (!canManageLendingNotes(session)) {
+        sendRestricted(response, role, "lending contact editing");
+        return;
+      }
+
+      const payload = await readJsonBody(request);
+      const validation = validateLendingContactUpdatePayload(payload);
+
+      if (!validation.valid) {
+        sendJson(response, {
+          error: "Lending contact validation failed.",
+          fieldErrors: validation.fieldErrors
+        }, 400);
+        return;
+      }
+
+      const contact = findLendingContactById(validation.contact.id);
+      const customer = contact ? findCustomer("accountNumber", contact.accountNumber) : null;
+
+      if (!contact || !contact.userCreated) {
+        sendJson(response, { error: "Only contact notes added through this prototype can be edited." }, 400);
+        return;
+      }
+
+      if (!customer || !canAccessCustomer(session, customer)) {
+        sendRestricted(response, role, "this lending profile");
+        return;
+      }
+
+      const updatedContact = updateLendingContact(validation.contact, contact);
+
+      sendJson(response, {
+        source: "sqlite",
+        role,
+        record: updatedContact,
+        message: "Lending contact note updated."
+      });
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/lending/contact-history/delete") {
+      if (request.method !== "DELETE") {
+        sendJson(response, { error: "Use DELETE to remove lending contact notes." }, 405);
+        return;
+      }
+
+      if (!canManageLendingNotes(session)) {
+        sendRestricted(response, role, "lending contact removal");
+        return;
+      }
+
+      const contactId = Number(requestUrl.searchParams.get("id"));
+
+      if (!Number.isInteger(contactId) || contactId <= 0) {
+        sendJson(response, { error: "A valid contact note id is required." }, 400);
+        return;
+      }
+
+      const removed = deleteLendingContact(contactId);
+
+      if (!removed) {
+        sendJson(response, { error: "Only contact notes added through this prototype can be removed." }, 400);
+        return;
+      }
+
+      sendJson(response, {
+        source: "sqlite",
+        role,
+        message: "Lending contact note removed."
       });
       return;
     }
@@ -596,7 +1932,7 @@ async function handleApi(request, requestUrl, response) {
         return;
       }
 
-      const createdNote = createBankNote(validation.note);
+      const createdNote = createBankNote(validation.note, getSessionDisplayName(session));
 
       sendJson(response, {
         source: "sqlite",
@@ -632,8 +1968,8 @@ async function handleApi(request, requestUrl, response) {
       const note = findBankNoteById(validation.note.id);
       const customer = note ? findCustomer("accountNumber", note.accountNumber) : null;
 
-      if (!note || note.author !== "Current User") {
-        sendJson(response, { error: "Only notes added by Current User can be edited." }, 400);
+      if (!note || note.author !== getSessionDisplayName(session)) {
+        sendJson(response, { error: "Only notes added by the active user can be edited." }, 400);
         return;
       }
 
@@ -671,10 +2007,10 @@ async function handleApi(request, requestUrl, response) {
         return;
       }
 
-      const removed = deleteBankNote(noteId);
+      const removed = deleteBankNote(noteId, getSessionDisplayName(session));
 
       if (!removed) {
-        sendJson(response, { error: "Only notes added by Current User can be removed." }, 400);
+        sendJson(response, { error: "Only notes added by the active user can be removed." }, 400);
         return;
       }
 
@@ -682,6 +2018,94 @@ async function handleApi(request, requestUrl, response) {
         source: "sqlite",
         role,
         message: "Bank note removed."
+      });
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/fraud-notes/create") {
+      if (request.method !== "POST") {
+        sendJson(response, { error: "Use POST to create fraud notes." }, 405);
+        return;
+      }
+
+      if (!canManageFraudNotes(session)) {
+        sendRestricted(response, role, "fraud note creation");
+        return;
+      }
+
+      const payload = await readJsonBody(request);
+      const validation = validateFraudNotePayload(payload);
+
+      if (!validation.valid) {
+        sendJson(response, {
+          error: "Fraud note validation failed.",
+          fieldErrors: validation.fieldErrors
+        }, 400);
+        return;
+      }
+
+      const customer = findCustomer("accountNumber", validation.note.accountNumber);
+
+      if (!customer || !canAccessCustomer(session, customer)) {
+        sendRestricted(response, role, "this fraud matrix");
+        return;
+      }
+
+      const createdNote = createFraudNote(validation.note, getSessionDisplayName(session));
+
+      sendJson(response, {
+        source: "sqlite",
+        role,
+        record: createdNote,
+        customer: sanitizeCustomerForRole(getCustomerRecord(validation.note.accountNumber), role),
+        message: "Fraud note saved and score recalculated."
+      }, 201);
+      return;
+    }
+
+    if (requestUrl.pathname === "/api/fraud-notes/delete") {
+      if (request.method !== "DELETE") {
+        sendJson(response, { error: "Use DELETE to remove fraud notes." }, 405);
+        return;
+      }
+
+      if (!canManageFraudNotes(session)) {
+        sendRestricted(response, role, "fraud note removal");
+        return;
+      }
+
+      const noteId = Number(requestUrl.searchParams.get("id"));
+
+      if (!Number.isInteger(noteId) || noteId <= 0) {
+        sendJson(response, { error: "A valid fraud note id is required." }, 400);
+        return;
+      }
+
+      const note = findFraudNoteById(noteId);
+      const customer = note ? findCustomer("accountNumber", note.accountNumber) : null;
+
+      if (!note || !customer || !canAccessCustomer(session, customer)) {
+        sendRestricted(response, role, "this fraud note");
+        return;
+      }
+
+      if (note.author !== getSessionDisplayName(session)) {
+        sendJson(response, { error: "Only Fraud Notes added by the active user can be removed." }, 400);
+        return;
+      }
+
+      const removed = deleteFraudNote(noteId);
+
+      if (!removed) {
+        sendJson(response, { error: "Fraud note could not be removed." }, 400);
+        return;
+      }
+
+      sendJson(response, {
+        source: "sqlite",
+        role,
+        customer: sanitizeCustomerForRole(getCustomerRecord(note.accountNumber), role),
+        message: "Fraud note removed and score recalculated."
       });
       return;
     }
@@ -755,7 +2179,7 @@ async function handleApi(request, requestUrl, response) {
         return;
       }
 
-      const createdMeeting = createMeeting(validation.meeting, customer, role);
+      const createdMeeting = createMeeting(validation.meeting, customer, session.user.username);
 
       sendJson(response, {
         source: "sqlite",
@@ -851,84 +2275,29 @@ async function handleApi(request, requestUrl, response) {
   }
 }
 
-async function loginUser(payload) {
-  const email = normalizeEmail(payload.email);
-  const password = String(payload.password || "");
-
-  if (!email || !password) {
-    return null;
-  }
-
-  const userRow = getUserByEmail(email);
-
-  if (!userRow || !userRow.is_active) {
-    return null;
-  }
-
-  const isPasswordValid = await verifyPassword(password, userRow.password_hash, userRow.password_salt);
-
-  if (!isPasswordValid) {
-    return null;
-  }
-
-  const token = createSessionToken(userRow);
-  const user = serializeUser(userRow);
-  const permissions = getPermissionsForRole(user.role);
-
-  return { token, user, permissions };
-}
-
-async function hashPassword(password, salt = randomBytes(16).toString("hex")) {
-  const derivedKey = await scrypt(String(password), Buffer.from(salt, "hex"), 64);
-  return {
-    hash: derivedKey.toString("hex"),
-    salt
-  };
-}
-
-async function verifyPassword(password, expectedHash, salt) {
-  const passwordHash = await hashPassword(password, salt);
-  const expected = Buffer.from(expectedHash, "hex");
-  const actual = Buffer.from(passwordHash.hash, "hex");
-
-  return expected.length === actual.length && timingSafeEqual(expected, actual);
-}
-
-function createSessionToken(userRow) {
-  const token = randomBytes(TOKEN_BYTES).toString("hex");
-  const user = serializeUser(userRow);
-
-  sessions.set(token, {
-    token,
-    user,
-    createdAt: Date.now(),
-    expiresAt: Date.now() + SESSION_TTL_MS
-  });
-
-  return token;
-}
-
 function getSessionFromRequest(request) {
+  const requestUrl = new URL(request.url, `http://${request.headers.host || "localhost"}`);
+  const requestedRole = normalizeRole(request.headers["x-crm-role"] || requestUrl.searchParams.get("role") || "");
+
+  if (requestedRole) {
+    return getPrototypeRoleSession(request, requestedRole);
+  }
+
   const token = getBearerToken(request);
 
-  if (!token) {
-    return null;
-  }
+  if (token) {
+    const session = sessions.get(token);
 
-  const session = sessions.get(token);
+    if (session && session.expiresAt > Date.now()) {
+      session.permissions = getPermissionsForRole(session.user.role);
+      session.expiresAt = Date.now() + SESSION_TTL_MS;
+      return session;
+    }
 
-  if (!session) {
-    return null;
-  }
-
-  if (session.expiresAt <= Date.now()) {
     sessions.delete(token);
-    return null;
   }
 
-  session.permissions = getPermissionsForRole(session.user.role);
-  session.expiresAt = Date.now() + SESSION_TTL_MS;
-  return session;
+  return getPrototypeRoleSession(request);
 }
 
 function getBearerToken(request) {
@@ -942,39 +2311,50 @@ function getBearerToken(request) {
   return token.trim();
 }
 
-function getUserByEmail(email) {
-  return db.prepare(`
-    SELECT
-      users.user_id,
-      users.username,
-      users.email,
-      users.password_hash,
-      users.password_salt,
-      users.role,
-      users.is_active,
-      role_test_users.label,
-      role_test_users.department,
-      role_test_users.name,
-      role_test_users.first_name
-    FROM users
-    INNER JOIN role_test_users ON role_test_users.role = users.role
-    WHERE lower(users.email) = lower(?)
-    LIMIT 1
-  `).get(email);
+function getPrototypeRoleSession(request, requestedRole = "") {
+  const requestUrl = new URL(request.url, `http://${request.headers.host || "localhost"}`);
+  const role = normalizeRole(requestedRole || request.headers["x-crm-role"] || requestUrl.searchParams.get("role") || "admin");
+
+  if (!role) {
+    return null;
+  }
+
+  return {
+    token: `prototype-${role}`,
+    user: getPrototypeUserForRole(role),
+    permissions: getPermissionsForRole(role),
+    prototype: true,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + SESSION_TTL_MS
+  };
 }
 
-function serializeUser(row) {
+function getPrototypeUserForRole(role) {
+  const row = db.prepare(`
+    SELECT role, label, department, name, first_name, email
+    FROM role_test_users
+    WHERE role = ?
+    LIMIT 1
+  `).get(role);
+  const fallbackName = role.charAt(0).toUpperCase() + role.slice(1);
+  const name = (row && (row.name || row.first_name)) || fallbackName;
+
   return {
-    id: row.user_id,
-    username: row.username,
-    email: row.email,
-    role: normalizeRole(row.role),
-    label: row.label,
-    department: row.department,
-    name: row.name,
-    firstName: row.first_name,
-    page: `home.html?role=${encodeURIComponent(normalizeRole(row.role))}`
+    id: `prototype-${role}`,
+    username: name,
+    email: row ? row.email : "",
+    role,
+    label: row ? row.label : fallbackName,
+    department: row ? row.department : "Prototype",
+    name,
+    firstName: getFirstName(name),
+    page: `home.html?role=${encodeURIComponent(role)}`,
+    prototype: true
   };
+}
+
+function getFirstName(name) {
+  return String(name || "").trim().split(/\s+/)[0] || "";
 }
 
 function getPermissionsForRole(role) {
@@ -1081,6 +2461,10 @@ function canEditBankNote(auth) {
   return hasPermission(auth, "edit_bank_notes");
 }
 
+function canManageFraudNotes(auth) {
+  return hasPermission(auth, "manage_fraud_notes");
+}
+
 function canScheduleMeeting(auth) {
   return hasPermission(auth, "manage_meetings");
 }
@@ -1103,6 +2487,109 @@ function canEditBusiness(auth) {
 
 function canEditEmployee(auth) {
   return hasPermission(auth, "edit_employees");
+}
+
+function canViewWealthProfile(auth) {
+  return hasPermission(auth, "view_wealth_profile");
+}
+
+function canEditWealthProfile(auth) {
+  return hasPermission(auth, "edit_wealth_profile");
+}
+
+function canManageWealthNotes(auth) {
+  return hasPermission(auth, "manage_wealth_notes");
+}
+
+function canViewLendingProfile(auth) {
+  return hasPermission(auth, "view_lending_profile");
+}
+
+function canViewRecommendations(auth) {
+  return hasAnyPermission(auth, ["view_discover_needs", "view_lending_profile", "view_wealth_profile"]);
+}
+
+function canEditLendingProfile(auth) {
+  return hasPermission(auth, "edit_lending_profile");
+}
+
+function canManageLendingNotes(auth) {
+  return hasPermission(auth, "manage_lending_notes");
+}
+
+function sanitizeFraudAnalysisForRole(analysis, role) {
+  if (role === "admin" || role === "fraud") {
+    return analysis;
+  }
+
+  return {
+    baseScore: analysis.baseScore,
+    adjustedScore: analysis.adjustedScore,
+    scoreLift: analysis.scoreLift,
+    riskTier: analysis.riskTier,
+    topCategory: "Fraud score summary only",
+    summary: "Detailed fraud rule matches are restricted to Fraud and Admin roles.",
+    topAction: "Use standard service procedures and escalate to Fraud if the customer raises a concern.",
+    actions: [],
+    matches: [],
+    sourcesAnalyzed: analysis.sourcesAnalyzed,
+    ruleCount: analysis.ruleCount,
+    scoringModel: "Fraud score summary is visible; detailed rule evidence is restricted."
+  };
+}
+
+function getRecommendationContext(accountNumber) {
+  return {
+    today: "2026-06-10",
+    lendingProfile: getLendingProfile(accountNumber),
+    wealthProfile: getWealthProfile(accountNumber)
+  };
+}
+
+function filterRecommendationAnalysisForRole(analysis, role) {
+  const allowedCategoriesByRole = {
+    admin: ["lending", "wealth", "discover"],
+    banker: ["lending", "discover"],
+    wealth: ["wealth", "discover"],
+    loans: ["lending", "discover"]
+  };
+  const allowedCategories = allowedCategoriesByRole[role] || [];
+  const recommendations = analysis.recommendations.filter((recommendation) => {
+    return allowedCategories.includes(recommendation.category);
+  });
+  const categories = {
+    lending: recommendations.filter((recommendation) => recommendation.category === "lending"),
+    wealth: recommendations.filter((recommendation) => recommendation.category === "wealth"),
+    discover: recommendations.filter((recommendation) => recommendation.category === "discover")
+  };
+
+  return {
+    ...analysis,
+    recommendationCount: recommendations.length,
+    recommendations,
+    categories,
+    nextBestAction: getFilteredNextBestAction(recommendations)
+  };
+}
+
+function getFilteredNextBestAction(recommendations) {
+  const discoverAction = recommendations.find((recommendation) => {
+    return recommendation.category === "discover" && recommendation.priority === "High";
+  });
+  const top = discoverAction || recommendations[0] || null;
+
+  if (!top) {
+    return null;
+  }
+
+  return {
+    title: top.product,
+    priority: top.priority,
+    reason: top.reason,
+    nextAction: top.nextAction,
+    score: top.score,
+    sourceRule: top.ruleName
+  };
 }
 
 function getPaginationParams(requestUrl) {
@@ -1146,7 +2633,7 @@ function getPagedCustomersForAuth(auth, requestUrl) {
   const hasBroadCustomerSearch = hasAnyPermission(auth, ["search_customers", "search_fraud_risk"]);
 
   if (!hasBroadCustomerSearch && hasPermission(auth, "search_wealth_customers")) {
-    clauses.push("(customers.affluency_tier >= 3 OR customers.invested_balance >= 100000)");
+    clauses.push("customers.household_balance > 100000");
   }
 
   if (!hasBroadCustomerSearch && hasPermission(auth, "search_loan_customers")) {
@@ -1505,7 +2992,10 @@ function sanitizeCustomerForRole(customer, role) {
       frontlineNotes: customer.frontlineNotes,
       lastReviewed: customer.lastReviewed,
       fraudHistory: customer.fraudHistory,
-      fraudDrivers: customer.fraudDrivers
+      fraudDrivers: customer.fraudDrivers,
+      fraudNotes: customer.fraudNotes,
+      alerts: customer.alerts,
+      notes: customer.notes
     };
   }
 
@@ -1522,12 +3012,14 @@ function sanitizeCustomerForRole(customer, role) {
   }
 
   if (role === "banker") {
+    const isWealthClient = isWealthCustomer(customer);
+
     return {
       ...customer,
-      wealthDataAccess: "restricted",
-      wealthAdvisor: "Restricted to Wealth",
-      investedBalance: 0,
-      affluencyTier: 0,
+      wealthDataAccess: isWealthClient ? "restricted" : "full",
+      wealthAdvisor: isWealthClient ? "Restricted to Wealth" : customer.wealthAdvisor,
+      investedBalance: isWealthClient ? 0 : customer.investedBalance,
+      affluencyTier: isWealthClient ? 0 : customer.affluencyTier,
       fraudDetailAccess: "score_only",
       fraudCases: null,
       frontlineNotes: null,
@@ -1572,7 +3064,16 @@ function sanitizeCustomerForRole(customer, role) {
 }
 
 function isWealthCustomer(customer) {
-  return customer.affluencyTier >= 3 || customer.investedBalance >= 100000;
+  return Number(customer.household || 0) > 100000;
+}
+
+function getFraudRiskTier(score) {
+  const numericScore = Number(score || 0);
+
+  if (numericScore >= 81) return "Critical";
+  if (numericScore >= 61) return "High";
+  if (numericScore >= 31) return "Medium";
+  return "Low";
 }
 
 function getLoanBalance(customer) {
@@ -1611,13 +3112,13 @@ function sendRestricted(response, role, dataType) {
 function sendAuthRequired(response) {
   sendJson(response, {
     authRequired: true,
-    error: "Authentication Required",
-    message: "Log in to the CRM before using this API."
+    error: "Role Required",
+    message: "Choose a prototype role before using this API."
   }, 401);
 }
 
 function serveStaticFile(requestUrl, response) {
-  const requestedPath = requestUrl.pathname === "/" ? "/login.html" : requestUrl.pathname;
+  const requestedPath = requestUrl.pathname === "/" ? "/home.html" : requestUrl.pathname;
   const filePath = normalize(join(ROOT, decodeURIComponent(requestedPath)));
   const safeRoot = resolve(ROOT);
   const safePath = resolve(filePath);
@@ -1686,12 +3187,13 @@ function getCustomerRecord(accountNumber) {
     accounts: getCustomerAccounts(accountNumber),
     householdMembers: getHouseholdMembers(accountNumber),
     fraudRiskScore: row.fraud_risk_score,
-    fraudRiskTier: row.fraud_risk_tier,
+    fraudRiskTier: getFraudRiskTier(row.fraud_risk_score),
     fraudCases: row.fraud_cases,
     frontlineNotes: row.frontline_notes,
     lastReviewed: row.last_reviewed,
     fraudHistory: getFraudHistory(accountNumber),
     fraudDrivers: getFraudDrivers(accountNumber),
+    fraudNotes: getFraudNotes(accountNumber),
     discoverNeeds: getDiscoverNeeds(accountNumber),
     nextBestAction: getNextBestAction(accountNumber),
     alerts: getAlerts(accountNumber),
@@ -1832,12 +3334,17 @@ function getNotes(accountNumber) {
     }));
 }
 
-function createBankNote(note) {
+function getFraudNotes(accountNumber) {
+  return db.prepare("SELECT * FROM fraud_notes WHERE account_number = ? ORDER BY sort_order DESC").all(accountNumber)
+    .map(mapFraudNote);
+}
+
+function createBankNote(note, author) {
   const sortOrder = getNextSortOrder("customer_notes", "account_number", note.accountNumber);
   const result = db.prepare(`
     INSERT INTO customer_notes (account_number, author, note_date, note_text, sort_order)
     VALUES (?, ?, ?, ?, ?)
-  `).run(note.accountNumber, "Current User", "Today", note.text, sortOrder);
+  `).run(note.accountNumber, author || "Current User", getTodayLabel(), note.text, sortOrder);
 
   return mapBankNote(db.prepare("SELECT * FROM customer_notes WHERE id = ?").get(result.lastInsertRowid));
 }
@@ -1852,10 +3359,10 @@ function updateBankNote(note) {
   return findBankNoteById(note.id);
 }
 
-function deleteBankNote(noteId) {
+function deleteBankNote(noteId, author) {
   const row = db.prepare("SELECT id, author FROM customer_notes WHERE id = ?").get(noteId);
 
-  if (!row || row.author !== "Current User") {
+  if (!row || row.author !== author) {
     return false;
   }
 
@@ -1870,6 +3377,397 @@ function mapBankNote(row) {
     author: row.author,
     date: row.note_date,
     text: row.note_text
+  };
+}
+
+// Run the optional LLM classifier over a customer's active fraud notes.
+// Returns an array of LLM-derived matches (possibly empty). Always safe: if the
+// classifier is unavailable or errors, this resolves to [] and the caller falls
+// back to keyword-only scoring. Notes are classified concurrently.
+async function classifyCustomerFraudNotes(customer) {
+  if (!llmClassifierAvailable(PROCESS_ENV)) {
+    return [];
+  }
+  const notes = Array.isArray(customer && customer.fraudNotes) ? customer.fraudNotes : [];
+  if (!notes.length) {
+    return [];
+  }
+  const taxonomy = Array.isArray(FRAUD_TEXT_RULES) ? FRAUD_TEXT_RULES : [];
+
+  try {
+    const results = await Promise.all(notes.map(function classifyOne(note) {
+      const text = note && (note.text || note.note || note.noteText || "");
+      return classifyFraudNote(text, taxonomy, PROCESS_ENV).then(function tag(match) {
+        if (!match) {
+          return null;
+        }
+        return {
+          ...match,
+          sourceLabel: `AI review of Fraud Note by ${note.author || "Fraud Team"}`,
+          sourceText: text
+        };
+      });
+    }));
+    return results.filter(Boolean);
+  } catch (err) {
+    return [];
+  }
+}
+
+function createFraudNote(note, author) {
+  const sortOrder = getNextSortOrder("fraud_notes", "account_number", note.accountNumber);
+  const result = db.prepare(`
+    INSERT INTO fraud_notes (account_number, author, note_date, note_text, sort_order)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(note.accountNumber, author || "Fraud Team", getTodayLabel(), note.text, sortOrder);
+
+  return mapFraudNote(db.prepare("SELECT * FROM fraud_notes WHERE id = ?").get(result.lastInsertRowid));
+}
+
+function findFraudNoteById(noteId) {
+  const row = db.prepare("SELECT * FROM fraud_notes WHERE id = ?").get(noteId);
+  return row ? mapFraudNote(row) : null;
+}
+
+function deleteFraudNote(noteId) {
+  const result = db.prepare("DELETE FROM fraud_notes WHERE id = ?").run(noteId);
+  return result.changes > 0;
+}
+
+function mapFraudNote(row) {
+  return {
+    dbId: row.id,
+    accountNumber: row.account_number,
+    author: row.author,
+    date: row.note_date,
+    text: row.note_text
+  };
+}
+
+function getWealthProfile(accountNumber) {
+  const row = db.prepare("SELECT * FROM wealth_profiles WHERE account_number = ?").get(accountNumber);
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+    accountNumber: row.account_number,
+    riskTolerance: row.risk_tolerance,
+    liquidityNeeds: row.liquidity_needs,
+    timeHorizon: row.time_horizon,
+    taxStatus: row.tax_status,
+    otherInvestments: row.other_investments,
+    investmentExperience: row.investment_experience,
+    investmentObjectives: row.investment_objectives,
+    concentrationConcerns: row.concentration_concerns,
+    incomeNeeds: row.income_needs,
+    lastMeetingDate: row.last_meeting_date,
+    lastCallDate: row.last_call_date,
+    nextMeetingDate: row.next_meeting_date,
+    followUp: row.follow_up,
+    accounts: getWealthAccounts(accountNumber),
+    lifeEvents: getWealthLifeEvents(accountNumber),
+    interactions: getWealthInteractions(accountNumber)
+  };
+}
+
+function updateWealthProfile(profile) {
+  db.prepare(`
+    UPDATE wealth_profiles
+    SET
+      risk_tolerance = ?,
+      liquidity_needs = ?,
+      time_horizon = ?,
+      tax_status = ?,
+      other_investments = ?,
+      investment_experience = ?,
+      investment_objectives = ?,
+      concentration_concerns = ?,
+      income_needs = ?,
+      last_meeting_date = ?,
+      last_call_date = ?,
+      next_meeting_date = ?,
+      follow_up = ?
+    WHERE account_number = ?
+  `).run(
+    profile.riskTolerance,
+    profile.liquidityNeeds,
+    profile.timeHorizon,
+    profile.taxStatus,
+    profile.otherInvestments,
+    profile.investmentExperience,
+    profile.investmentObjectives,
+    profile.concentrationConcerns,
+    profile.incomeNeeds,
+    profile.lastMeetingDate,
+    profile.lastCallDate,
+    profile.nextMeetingDate,
+    profile.followUp,
+    profile.accountNumber
+  );
+
+  return getWealthProfile(profile.accountNumber);
+}
+
+function getWealthAccounts(accountNumber) {
+  return db.prepare("SELECT * FROM wealth_accounts WHERE account_number = ? ORDER BY sort_order").all(accountNumber)
+    .map((row) => ({
+      id: row.id,
+      group: row.account_group,
+      name: row.account_name,
+      accountId: row.account_id,
+      balance: row.balance,
+      status: row.status
+    }));
+}
+
+function getWealthLifeEvents(accountNumber) {
+  return db.prepare("SELECT * FROM wealth_life_events WHERE account_number = ? ORDER BY sort_order").all(accountNumber)
+    .map((row) => ({
+      dbId: row.id,
+      title: row.event_title,
+      date: row.event_date,
+      alertDate: row.alert_date,
+      note: row.note_text
+    }));
+}
+
+function getWealthInteractions(accountNumber) {
+  return db.prepare("SELECT * FROM wealth_interactions WHERE account_number = ? ORDER BY sort_order DESC, id DESC").all(accountNumber)
+    .map(mapWealthInteraction);
+}
+
+function findWealthInteractionById(interactionId) {
+  const row = db.prepare("SELECT * FROM wealth_interactions WHERE id = ?").get(interactionId);
+  return row ? mapWealthInteraction(row) : null;
+}
+
+function createWealthInteraction(interaction, role) {
+  const owner = getRoleOwner(role);
+  const sortOrder = getNextSortOrder("wealth_interactions", "account_number", interaction.accountNumber);
+  const result = db.prepare(`
+    INSERT INTO wealth_interactions (account_number, interaction_type, interaction_date, owner, note_text, is_user_created, sort_order)
+    VALUES (?, ?, ?, ?, ?, 1, ?)
+  `).run(
+    interaction.accountNumber,
+    interaction.type,
+    interaction.date,
+    owner,
+    interaction.note,
+    sortOrder
+  );
+
+  return findWealthInteractionById(result.lastInsertRowid);
+}
+
+function updateWealthInteraction(interaction, existingInteraction) {
+  db.prepare(`
+    UPDATE wealth_interactions
+    SET interaction_type = ?, interaction_date = ?, owner = ?, note_text = ?
+    WHERE id = ?
+  `).run(
+    interaction.type,
+    interaction.date,
+    existingInteraction.owner,
+    interaction.note,
+    interaction.id
+  );
+
+  return findWealthInteractionById(interaction.id);
+}
+
+function deleteWealthInteraction(interactionId) {
+  const row = db.prepare("SELECT id, is_user_created FROM wealth_interactions WHERE id = ?").get(interactionId);
+
+  if (!row || !row.is_user_created) {
+    return false;
+  }
+
+  const result = db.prepare("DELETE FROM wealth_interactions WHERE id = ?").run(interactionId);
+  return result.changes > 0;
+}
+
+function mapWealthInteraction(row) {
+  return {
+    dbId: row.id,
+    accountNumber: row.account_number,
+    type: row.interaction_type,
+    date: row.interaction_date,
+    owner: row.owner,
+    note: row.note_text,
+    userCreated: Boolean(row.is_user_created)
+  };
+}
+
+function getLendingProfile(accountNumber) {
+  const row = db.prepare("SELECT * FROM lending_profiles WHERE account_number = ?").get(accountNumber);
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+    accountNumber: row.account_number,
+    loanStatus: row.loan_status,
+    interestRate: row.interest_rate,
+    monthlyPayment: row.monthly_payment,
+    yearlyPayment: row.yearly_payment,
+    monthlyIncome: row.monthly_income,
+    pmiStatus: row.pmi_status,
+    pmiRecommendation: row.pmi_recommendation,
+    homeEquity: row.home_equity,
+    helocStatus: row.heloc_status,
+    billAmountOwed: row.bill_amount_owed,
+    pastDueAmount: row.past_due_amount,
+    maturityDate: row.maturity_date,
+    closingStatus: row.closing_status,
+    splitPaymentStructure: row.split_payment_structure,
+    creditScore: row.credit_score,
+    availableLoanProducts: row.available_loan_products,
+    documents: getLendingDocuments(accountNumber),
+    contactHistory: getLendingContactHistory(accountNumber)
+  };
+}
+
+function updateLendingProfile(profile) {
+  db.prepare(`
+    UPDATE lending_profiles
+    SET
+      loan_status = ?,
+      interest_rate = ?,
+      monthly_payment = ?,
+      yearly_payment = ?,
+      monthly_income = ?,
+      pmi_status = ?,
+      pmi_recommendation = ?,
+      home_equity = ?,
+      heloc_status = ?,
+      bill_amount_owed = ?,
+      past_due_amount = ?,
+      maturity_date = ?,
+      closing_status = ?,
+      split_payment_structure = ?,
+      credit_score = ?,
+      available_loan_products = ?
+    WHERE account_number = ?
+  `).run(
+    profile.loanStatus,
+    profile.interestRate,
+    profile.monthlyPayment,
+    profile.yearlyPayment,
+    profile.monthlyIncome,
+    profile.pmiStatus,
+    profile.pmiRecommendation,
+    profile.homeEquity,
+    profile.helocStatus,
+    profile.billAmountOwed,
+    profile.pastDueAmount,
+    profile.maturityDate,
+    profile.closingStatus,
+    profile.splitPaymentStructure,
+    profile.creditScore,
+    profile.availableLoanProducts,
+    profile.accountNumber
+  );
+
+  return getLendingProfile(profile.accountNumber);
+}
+
+function getLendingDocuments(accountNumber) {
+  return db.prepare("SELECT * FROM lending_documents WHERE account_number = ? ORDER BY sort_order").all(accountNumber)
+    .map(mapLendingDocument);
+}
+
+function findLendingDocumentById(documentId) {
+  const row = db.prepare("SELECT * FROM lending_documents WHERE id = ?").get(documentId);
+  return row ? mapLendingDocument(row) : null;
+}
+
+function updateLendingDocument(document) {
+  db.prepare("UPDATE lending_documents SET document_status = ?, last_updated = ? WHERE id = ?")
+    .run(document.status, document.lastUpdated, document.id);
+
+  return findLendingDocumentById(document.id);
+}
+
+function mapLendingDocument(row) {
+  return {
+    dbId: row.id,
+    accountNumber: row.account_number,
+    name: row.document_name,
+    status: row.document_status,
+    lastUpdated: row.last_updated
+  };
+}
+
+function getLendingContactHistory(accountNumber) {
+  return db.prepare("SELECT * FROM lending_contact_history WHERE account_number = ? ORDER BY sort_order DESC, id DESC").all(accountNumber)
+    .map(mapLendingContact);
+}
+
+function findLendingContactById(contactId) {
+  const row = db.prepare("SELECT * FROM lending_contact_history WHERE id = ?").get(contactId);
+  return row ? mapLendingContact(row) : null;
+}
+
+function createLendingContact(contact, role) {
+  const owner = getRoleOwner(role);
+  const sortOrder = getNextSortOrder("lending_contact_history", "account_number", contact.accountNumber);
+  const result = db.prepare(`
+    INSERT INTO lending_contact_history (account_number, contact_type, contact_date, contact_value, owner, note_text, is_user_created, sort_order)
+    VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+  `).run(
+    contact.accountNumber,
+    contact.type,
+    contact.date,
+    contact.value,
+    owner,
+    contact.note,
+    sortOrder
+  );
+
+  return findLendingContactById(result.lastInsertRowid);
+}
+
+function updateLendingContact(contact, existingContact) {
+  db.prepare(`
+    UPDATE lending_contact_history
+    SET contact_type = ?, contact_date = ?, contact_value = ?, owner = ?, note_text = ?
+    WHERE id = ?
+  `).run(
+    contact.type,
+    contact.date,
+    contact.value,
+    existingContact.owner,
+    contact.note,
+    contact.id
+  );
+
+  return findLendingContactById(contact.id);
+}
+
+function deleteLendingContact(contactId) {
+  const row = db.prepare("SELECT id, is_user_created FROM lending_contact_history WHERE id = ?").get(contactId);
+
+  if (!row || !row.is_user_created) {
+    return false;
+  }
+
+  const result = db.prepare("DELETE FROM lending_contact_history WHERE id = ?").run(contactId);
+  return result.changes > 0;
+}
+
+function mapLendingContact(row) {
+  return {
+    dbId: row.id,
+    accountNumber: row.account_number,
+    type: row.contact_type,
+    date: row.contact_date,
+    value: row.contact_value,
+    owner: row.owner,
+    note: row.note_text,
+    userCreated: Boolean(row.is_user_created)
   };
 }
 
@@ -2243,6 +4141,31 @@ function validateNoteUpdatePayload(payload) {
   };
 }
 
+function validateFraudNotePayload(payload) {
+  const fieldErrors = {};
+  const accountNumber = String(payload?.accountNumber || "").trim();
+  const text = String(payload?.text || "").trim();
+
+  if (!accountNumber) {
+    fieldErrors.accountNumber = "Account number is required.";
+  }
+
+  if (!text) {
+    fieldErrors.text = "Fraud note text is required.";
+  } else if (text.length > 500) {
+    fieldErrors.text = "Fraud notes must be 500 characters or fewer.";
+  }
+
+  return {
+    valid: Object.keys(fieldErrors).length === 0,
+    fieldErrors,
+    note: {
+      accountNumber,
+      text
+    }
+  };
+}
+
 function validateMeetingPayload(payload) {
   const fieldErrors = {};
   const accountNumber = String(payload?.accountNumber || "").trim();
@@ -2438,6 +4361,208 @@ function validateEmployeeUpdatePayload(payload) {
   };
 }
 
+function validateWealthProfilePayload(payload) {
+  const fieldErrors = {};
+  const profile = {
+    accountNumber: String(payload?.accountNumber || "").trim(),
+    riskTolerance: String(payload?.riskTolerance || "").trim(),
+    liquidityNeeds: String(payload?.liquidityNeeds || "").trim(),
+    timeHorizon: String(payload?.timeHorizon || "").trim(),
+    taxStatus: String(payload?.taxStatus || "").trim(),
+    otherInvestments: String(payload?.otherInvestments || "").trim(),
+    investmentExperience: String(payload?.investmentExperience || "").trim(),
+    investmentObjectives: String(payload?.investmentObjectives || "").trim(),
+    concentrationConcerns: String(payload?.concentrationConcerns || "").trim(),
+    incomeNeeds: String(payload?.incomeNeeds || "").trim(),
+    lastMeetingDate: String(payload?.lastMeetingDate || "").trim(),
+    lastCallDate: String(payload?.lastCallDate || "").trim(),
+    nextMeetingDate: String(payload?.nextMeetingDate || "").trim(),
+    followUp: String(payload?.followUp || "").trim()
+  };
+
+  requireTextField(fieldErrors, profile.accountNumber, "accountNumber", "Account number", 32);
+  requireTextField(fieldErrors, profile.riskTolerance, "riskTolerance", "Risk tolerance", 80);
+  requireTextField(fieldErrors, profile.liquidityNeeds, "liquidityNeeds", "Liquidity needs", 240);
+  requireTextField(fieldErrors, profile.timeHorizon, "timeHorizon", "Time horizon", 80);
+  requireTextField(fieldErrors, profile.taxStatus, "taxStatus", "Tax status", 160);
+  requireTextField(fieldErrors, profile.otherInvestments, "otherInvestments", "Other investments", 220);
+  requireTextField(fieldErrors, profile.investmentExperience, "investmentExperience", "Investment experience", 80);
+  requireTextField(fieldErrors, profile.investmentObjectives, "investmentObjectives", "Investment objectives", 240);
+  requireTextField(fieldErrors, profile.concentrationConcerns, "concentrationConcerns", "Concentration concerns", 220);
+  requireTextField(fieldErrors, profile.incomeNeeds, "incomeNeeds", "Income needs", 180);
+  requireTextField(fieldErrors, profile.lastMeetingDate, "lastMeetingDate", "Last meeting date", 24);
+  requireTextField(fieldErrors, profile.lastCallDate, "lastCallDate", "Last call date", 24);
+  requireTextField(fieldErrors, profile.nextMeetingDate, "nextMeetingDate", "Next meeting date", 24);
+  requireTextField(fieldErrors, profile.followUp, "followUp", "Follow-up", 240);
+
+  return {
+    valid: Object.keys(fieldErrors).length === 0,
+    fieldErrors,
+    profile
+  };
+}
+
+function validateWealthInteractionPayload(payload) {
+  const fieldErrors = {};
+  const interaction = {
+    accountNumber: String(payload?.accountNumber || "").trim(),
+    type: String(payload?.type || "").trim(),
+    date: String(payload?.date || "").trim(),
+    note: String(payload?.note || "").trim()
+  };
+
+  requireTextField(fieldErrors, interaction.accountNumber, "accountNumber", "Account number", 32);
+
+  if (!["Meeting", "Call", "Follow-up", "Life event"].includes(interaction.type)) {
+    fieldErrors.type = "Choose a wealth interaction type.";
+  }
+
+  requireTextField(fieldErrors, interaction.date, "date", "Date", 24);
+  requireTextField(fieldErrors, interaction.note, "note", "Interaction note", 500);
+
+  return {
+    valid: Object.keys(fieldErrors).length === 0,
+    fieldErrors,
+    interaction
+  };
+}
+
+function validateWealthInteractionUpdatePayload(payload) {
+  const validation = validateWealthInteractionPayload(payload);
+  const id = parseRecordId(payload?.id || payload?.dbId);
+
+  if (!id) {
+    validation.fieldErrors.id = "A valid interaction id is required.";
+  }
+
+  return {
+    valid: validation.valid && Object.keys(validation.fieldErrors).length === 0,
+    fieldErrors: validation.fieldErrors,
+    interaction: {
+      ...validation.interaction,
+      id
+    }
+  };
+}
+
+function validateLendingProfilePayload(payload) {
+  const fieldErrors = {};
+  const profile = {
+    accountNumber: String(payload?.accountNumber || "").trim(),
+    loanStatus: String(payload?.loanStatus || "").trim(),
+    interestRate: String(payload?.interestRate || "").trim(),
+    monthlyPayment: Math.round(Number(payload?.monthlyPayment)),
+    yearlyPayment: Math.round(Number(payload?.yearlyPayment)),
+    monthlyIncome: Math.round(Number(payload?.monthlyIncome)),
+    pmiStatus: String(payload?.pmiStatus || "").trim(),
+    pmiRecommendation: String(payload?.pmiRecommendation || "").trim(),
+    homeEquity: Math.round(Number(payload?.homeEquity)),
+    helocStatus: String(payload?.helocStatus || "").trim(),
+    billAmountOwed: Math.round(Number(payload?.billAmountOwed)),
+    pastDueAmount: Math.round(Number(payload?.pastDueAmount)),
+    maturityDate: String(payload?.maturityDate || "").trim(),
+    closingStatus: String(payload?.closingStatus || "").trim(),
+    splitPaymentStructure: String(payload?.splitPaymentStructure || "").trim(),
+    creditScore: Math.round(Number(payload?.creditScore)),
+    availableLoanProducts: String(payload?.availableLoanProducts || "").trim()
+  };
+
+  requireTextField(fieldErrors, profile.accountNumber, "accountNumber", "Account number", 32);
+  requireTextField(fieldErrors, profile.loanStatus, "loanStatus", "Loan status", 90);
+  requireTextField(fieldErrors, profile.interestRate, "interestRate", "Interest rate", 24);
+  requireTextField(fieldErrors, profile.pmiStatus, "pmiStatus", "PMI status", 90);
+  requireTextField(fieldErrors, profile.pmiRecommendation, "pmiRecommendation", "PMI recommendation", 240);
+  requireTextField(fieldErrors, profile.helocStatus, "helocStatus", "HELOC status", 140);
+  requireTextField(fieldErrors, profile.maturityDate, "maturityDate", "Maturity date", 24);
+  requireTextField(fieldErrors, profile.closingStatus, "closingStatus", "Closing status", 90);
+  requireTextField(fieldErrors, profile.splitPaymentStructure, "splitPaymentStructure", "Split payment structure", 180);
+  requireTextField(fieldErrors, profile.availableLoanProducts, "availableLoanProducts", "Available loan products", 220);
+
+  validateMoneyField(fieldErrors, profile.monthlyPayment, "monthlyPayment", "Monthly payment");
+  validateMoneyField(fieldErrors, profile.yearlyPayment, "yearlyPayment", "Yearly payment");
+  validateMoneyField(fieldErrors, profile.monthlyIncome, "monthlyIncome", "Monthly income");
+  validateMoneyField(fieldErrors, profile.homeEquity, "homeEquity", "Home equity");
+  validateMoneyField(fieldErrors, profile.billAmountOwed, "billAmountOwed", "Bill amount owed");
+  validateMoneyField(fieldErrors, profile.pastDueAmount, "pastDueAmount", "Past due amount");
+
+  if (!Number.isFinite(profile.creditScore) || profile.creditScore < 300 || profile.creditScore > 850) {
+    fieldErrors.creditScore = "Credit score must be between 300 and 850.";
+  }
+
+  return {
+    valid: Object.keys(fieldErrors).length === 0,
+    fieldErrors,
+    profile
+  };
+}
+
+function validateLendingDocumentPayload(payload) {
+  const fieldErrors = {};
+  const document = {
+    id: parseRecordId(payload?.id || payload?.dbId),
+    status: String(payload?.status || "").trim(),
+    lastUpdated: String(payload?.lastUpdated || "").trim()
+  };
+
+  if (!document.id) {
+    fieldErrors.id = "A valid document id is required.";
+  }
+
+  requireTextField(fieldErrors, document.status, "status", "Document status", 90);
+  requireTextField(fieldErrors, document.lastUpdated, "lastUpdated", "Last updated", 24);
+
+  return {
+    valid: Object.keys(fieldErrors).length === 0,
+    fieldErrors,
+    document
+  };
+}
+
+function validateLendingContactPayload(payload) {
+  const fieldErrors = {};
+  const contact = {
+    accountNumber: String(payload?.accountNumber || "").trim(),
+    type: String(payload?.type || "").trim(),
+    date: String(payload?.date || "").trim(),
+    value: String(payload?.value || "").trim(),
+    note: String(payload?.note || "").trim()
+  };
+
+  requireTextField(fieldErrors, contact.accountNumber, "accountNumber", "Account number", 32);
+
+  if (!["Phone", "Email", "Meeting", "Document"].includes(contact.type)) {
+    fieldErrors.type = "Choose a lending contact type.";
+  }
+
+  requireTextField(fieldErrors, contact.date, "date", "Date", 24);
+  requireTextField(fieldErrors, contact.value, "value", "Phone/email/contact value", 140);
+  requireTextField(fieldErrors, contact.note, "note", "Contact note", 500);
+
+  return {
+    valid: Object.keys(fieldErrors).length === 0,
+    fieldErrors,
+    contact
+  };
+}
+
+function validateLendingContactUpdatePayload(payload) {
+  const validation = validateLendingContactPayload(payload);
+  const id = parseRecordId(payload?.id || payload?.dbId);
+
+  if (!id) {
+    validation.fieldErrors.id = "A valid contact note id is required.";
+  }
+
+  return {
+    valid: validation.valid && Object.keys(validation.fieldErrors).length === 0,
+    fieldErrors: validation.fieldErrors,
+    contact: {
+      ...validation.contact,
+      id
+    }
+  };
+}
+
 function parseRecordId(value) {
   const id = Number(value);
   return Number.isInteger(id) && id > 0 ? id : 0;
@@ -2448,6 +4573,12 @@ function requireTextField(fieldErrors, value, field, label, maxLength) {
     fieldErrors[field] = `${label} is required.`;
   } else if (value.length > maxLength) {
     fieldErrors[field] = `${label} must be ${maxLength} characters or fewer.`;
+  }
+}
+
+function validateMoneyField(fieldErrors, value, field, label) {
+  if (!Number.isFinite(value) || value < 0) {
+    fieldErrors[field] = `${label} must be a positive number.`;
   }
 }
 
@@ -2644,12 +4775,31 @@ function getMeetingVisibility(customer) {
 }
 
 function getRoleOwner(role) {
+  if (role && !AUTHENTICATED_ROLES.includes(role)) {
+    return role;
+  }
+
   return {
-    admin: "Morgan Lee",
+    admin: "Aung",
     banker: "Nora Whitfield",
-    wealth: "Avery Chen",
-    loans: "Taylor Brooks"
+    wealth: "Luke",
+    loans: "Gavin",
+    fraud: "Preston",
+    hr: "Lizzie",
+    marketing: "Alex"
   }[role] || "Current User";
+}
+
+function getSessionDisplayName(session) {
+  return session?.user?.username || session?.user?.name || getRoleOwner(session?.user?.role);
+}
+
+function getTodayLabel() {
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${month}/${day}/${today.getFullYear()}`;
 }
 
 function getCustomerLookup(type, normalizedValue) {
@@ -2743,7 +4893,7 @@ function normalizeValue(value) {
 }
 
 function getNextSortOrder(tableName, columnName, value) {
-  const safeTables = new Set(["customer_notes"]);
+  const safeTables = new Set(["customer_notes", "fraud_notes", "wealth_interactions", "lending_contact_history"]);
   const safeColumns = new Set(["account_number"]);
 
   if (!safeTables.has(tableName) || !safeColumns.has(columnName)) {

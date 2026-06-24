@@ -1,0 +1,65 @@
+{
+  "modelName": "mortgage_refinance_v1",
+  "productKey": "mortgage_refinance",
+  "type": "logistic_regression",
+  "version": "v1",
+  "active": true,
+  "trainedAt": "2026-06-11T00:00:00.000Z",
+  "featureNames": ["age", "householdBalance", "investedBalance", "wealthGap", "creditScore", "fraudScore", "daysLastContact", "meetingsLastYear", "hasInvestments", "hasMortgage", "relationshipYears", "accountCount", "engagementScore", "savingsRate", "debtToIncome"],
+  "baseline": -2.0597,
+  "coefficients": {
+    "age": 0.4218,
+    "householdBalance": 3.1031,
+    "investedBalance": 1.7929,
+    "wealthGap": -0.9393,
+    "creditScore": 1.6001,
+    "fraudScore": -2.1539,
+    "daysLastContact": -0.1163,
+    "meetingsLastYear": -0.1622,
+    "hasInvestments": -0.6621,
+    "hasMortgage": 4.7579,
+    "relationshipYears": 1.1739,
+    "accountCount": -0.2159,
+    "engagementScore": -0.584,
+    "savingsRate": -0.6741,
+    "debtToIncome": 0.0494
+  },
+  "featureStats": {
+    "age": { "min": 31, "max": 74 },
+    "householdBalance": { "min": 15004, "max": 1917201 },
+    "investedBalance": { "min": 0, "max": 1750093 },
+    "wealthGap": { "min": 0, "max": 1 },
+    "creditScore": { "min": 681, "max": 782 },
+    "fraudScore": { "min": 0, "max": 100 },
+    "daysLastContact": { "min": 10, "max": 120 },
+    "meetingsLastYear": { "min": 0, "max": 1 },
+    "hasInvestments": { "min": 0, "max": 1 },
+    "hasMortgage": { "min": 0, "max": 1 },
+    "relationshipYears": { "min": 0.5, "max": 33 },
+    "accountCount": { "min": 2, "max": 3 },
+    "engagementScore": { "min": 0, "max": 0.2933 },
+    "savingsRate": { "min": 0.052, "max": 1 },
+    "debtToIncome": { "min": 0, "max": 1 }
+  },
+  "metrics": {
+    "accuracy": 0.9444,
+    "precision": 0.9375,
+    "recall": 0.9091,
+    "f1Score": 0.9231,
+    "confusionMatrix": {
+      "truePositive": 30,
+      "trueNegative": 55,
+      "falsePositive": 2,
+      "falseNegative": 3
+    }
+  },
+  "training": {
+    "examples": 450,
+    "trainExamples": 360,
+    "testExamples": 90,
+    "epochs": 900,
+    "learningRate": 0.5,
+    "l2": 0.0025,
+    "threshold": 0.5
+  }
+}

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Lending Profile</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="crm-shell">
+    <header class="client-topbar">
+      <div class="topbar-links">
+        <a class="back-link" href="home.html">Home</a>
+        <a class="back-link" href="index.html">Lookup</a>
+      </div>
+      <span class="access-pill">Loans and Mortgage Profile</span>
+    </header>
+
+    <section id="lendingNotFoundState" class="not-found hidden">
+      <h1>Lending profile not found</h1>
+      <p id="lendingNotFoundMessage">No matching lending client was found.</p>
+      <a class="primary-link" href="index.html">Return to search</a>
+    </section>
+
+    <article id="lendingProfile" class="client-profile hidden">
+      <header class="profile-hero">
+        <div>
+          <p class="eyebrow">Loans and Mortgages</p>
+          <h1 id="lendingCustomerName">Customer Name</h1>
+          <p id="lendingCustomerMeta">Account and CIF</p>
+        </div>
+        <div class="profile-actions">
+          <a class="profile-action-card discover-card" id="lendingClient360Link" href="client.html">
+            <span>Client 360</span>
+            <strong>Profile</strong>
+            <small>Relationship context</small>
+          </a>
+          <section class="profile-action-card fraud-matrix-card score-only" aria-label="Fraud score summary">
+            <span>Fraud Score</span>
+            <strong id="lendingFraudScore">0 / 100</strong>
+            <small id="lendingFraudTier">Score only</small>
+          </section>
+        </div>
+      </header>
+
+      <section class="summary-grid" aria-label="Lending summary">
+        <article class="summary-card">
+          <span>Loan Status</span>
+          <strong id="lendingLoanStatus">Active</strong>
+        </article>
+        <article class="summary-card">
+          <span>Monthly Payment</span>
+          <strong id="lendingMonthlyPayment">$0</strong>
+        </article>
+        <article class="summary-card">
+          <span>Yearly Payment</span>
+          <strong id="lendingYearlyPayment">$0</strong>
+        </article>
+        <article class="summary-card">
+          <span>Monthly Income</span>
+          <strong id="lendingMonthlyIncome">$0</strong>
+        </article>
+        <article class="summary-card">
+          <span>Past Due</span>
+          <strong id="lendingPastDue">$0</strong>
+        </article>
+        <article class="summary-card">
+          <span>Credit Score</span>
+          <strong id="lendingCreditScore">000</strong>
+        </article>
+      </section>
+
+      <section class="service-grid" aria-label="Lending workflow">
+        <article class="detail-card">
+          <div class="section-heading-row">
+            <h2>Lending Details</h2>
+            <button id="lendingEditButton" class="secondary-button compact-button" type="button">Edit</button>
+          </div>
+          <dl id="lendingProfileDetails"></dl>
+          <form id="lendingEditForm" class="crm-form compact-edit-form hidden">
+            <div class="form-grid">
+              <label>
+                <span>Loan status</span>
+                <input id="lendingStatusField" type="text" maxlength="90">
+              </label>
+              <label>
+                <span>Interest rate</span>
+                <input id="lendingRateField" type="text" maxlength="24">
+              </label>
+              <label>
+                <span>Monthly payment</span>
+                <input id="lendingMonthlyPaymentField" type="number" min="0">
+              </label>
+              <label>
+                <span>Yearly payment</span>
+                <input id="lendingYearlyPaymentField" type="number" min="0">
+              </label>
+              <label>
+                <span>Monthly income</span>
+                <input id="lendingIncomeField" type="number" min="0">
+              </label>
+              <label>
+                <span>Credit score</span>
+                <input id="lendingCreditField" type="number" min="300" max="850">
+              </label>
+              <label>
+                <span>PMI status</span>
+                <input id="lendingPmiStatusField" type="text" maxlength="90">
+              </label>
+              <label>
+                <span>PMI recommendation</span>
+                <input id="lendingPmiRecommendationField" type="text" maxlength="240">
+              </label>
+              <label>
+                <span>Home equity</span>
+                <input id="lendingHomeEquityField" type="number" min="0">
+              </label>
+              <label>
+                <span>HELOC status</span>
+                <input id="lendingHelocField" type="text" maxlength="140">
+              </label>
+              <label>
+                <span>Bill amount owed</span>
+                <input id="lendingOwedField" type="number" min="0">
+              </label>
+              <label>
+                <span>Past due amount</span>
+                <input id="lendingPastDueField" type="number" min="0">
+              </label>
+              <label>
+                <span>Maturity date</span>
+                <input id="lendingMaturityField" type="text" maxlength="24">
+              </label>
+              <label>
+                <span>Closing status</span>
+                <input id="lendingClosingField" type="text" maxlength="90">
+              </label>
+            </div>
+            <label class="full-field">
+              <span>Split payment structure</span>
+              <input id="lendingSplitPaymentField" type="text" maxlength="180">
+            </label>
+            <label class="full-field">
+              <span>Available loan products</span>
+              <input id="lendingAvailableProductsField" type="text" maxlength="220">
+            </label>
+            <div class="form-footer">
+              <p id="lendingEditMessage" class="form-message hidden" role="status"></p>
+              <div class="button-group">
+                <button id="lendingCancelEditButton" class="secondary-button" type="button">Cancel</button>
+                <button id="lendingSaveButton" type="submit">Save profile</button>
+              </div>
+            </div>
+          </form>
+        </article>
+
+        <article class="detail-card">
+          <h2>Required Documentation</h2>
+          <div id="lendingDocumentList" class="document-list"></div>
+          <p id="lendingDocumentMessage" class="form-message hidden" role="status"></p>
+        </article>
+      </section>
+
+      <section class="details-grid">
+        <article class="detail-card">
+          <h2>Loan Products</h2>
+          <ul id="lendingLoanList" class="record-list"></ul>
+        </article>
+
+        <article class="detail-card">
+          <h2>Payment and Equity Snapshot</h2>
+          <div id="lendingPaymentSnapshot" class="profitability-list"></div>
+        </article>
+
+        <article class="detail-card">
+          <div class="section-heading-row">
+            <h2>Contact History</h2>
+            <button id="lendingContactCancelButton" class="secondary-button compact-button hidden" type="button">Cancel Edit</button>
+          </div>
+          <div id="lendingContactList" class="note-list"></div>
+          <form id="lendingContactForm" class="crm-form compact-edit-form">
+            <div class="form-grid">
+              <label>
+                <span>Type</span>
+                <select id="lendingContactType">
+                  <option>Phone</option>
+                  <option>Email</option>
+                  <option>Meeting</option>
+                  <option>Document</option>
+                </select>
+              </label>
+              <label>
+                <span>Date</span>
+                <input id="lendingContactDate" type="text" placeholder="06/30/2026">
+              </label>
+              <label>
+                <span>Phone/email</span>
+                <input id="lendingContactValue" type="text" maxlength="140" placeholder="317-555-0188">
+              </label>
+              <label>
+                <span>Note</span>
+                <input id="lendingContactNote" type="text" maxlength="500" placeholder="Log call or email notes">
+              </label>
+            </div>
+            <div class="form-footer">
+              <p id="lendingContactMessage" class="form-message hidden" role="status"></p>
+              <button id="lendingContactSaveButton" type="submit">Add contact note</button>
+            </div>
+          </form>
+        </article>
+
+        <article class="detail-card">
+          <h2>Recommendations</h2>
+          <ul id="lendingRecommendationList" class="record-list"></ul>
+        </article>
+      </section>
+    </article>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="api.js"></script>
+  <script src="lending.js"></script>
+</body>
+</html>

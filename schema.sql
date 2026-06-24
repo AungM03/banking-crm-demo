@@ -3,6 +3,13 @@ PRAGMA foreign_keys = ON;
 DROP TABLE IF EXISTS role_permissions;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS role_test_users;
+DROP TABLE IF EXISTS lending_contact_history;
+DROP TABLE IF EXISTS lending_documents;
+DROP TABLE IF EXISTS lending_profiles;
+DROP TABLE IF EXISTS wealth_interactions;
+DROP TABLE IF EXISTS wealth_life_events;
+DROP TABLE IF EXISTS wealth_accounts;
+DROP TABLE IF EXISTS wealth_profiles;
 DROP TABLE IF EXISTS meetings;
 DROP TABLE IF EXISTS offers;
 DROP TABLE IF EXISTS leads;
@@ -145,6 +152,105 @@ CREATE TABLE customer_notes (
   author TEXT NOT NULL,
   note_date TEXT NOT NULL,
   note_text TEXT NOT NULL,
+  sort_order INTEGER NOT NULL
+);
+
+CREATE TABLE fraud_notes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  account_number TEXT NOT NULL REFERENCES customers(account_number) ON DELETE CASCADE,
+  author TEXT NOT NULL,
+  note_date TEXT NOT NULL,
+  note_text TEXT NOT NULL,
+  sort_order INTEGER NOT NULL
+);
+
+CREATE TABLE wealth_profiles (
+  account_number TEXT PRIMARY KEY REFERENCES customers(account_number) ON DELETE CASCADE,
+  risk_tolerance TEXT NOT NULL,
+  liquidity_needs TEXT NOT NULL,
+  time_horizon TEXT NOT NULL,
+  tax_status TEXT NOT NULL,
+  other_investments TEXT NOT NULL,
+  investment_experience TEXT NOT NULL,
+  investment_objectives TEXT NOT NULL,
+  concentration_concerns TEXT NOT NULL,
+  income_needs TEXT NOT NULL,
+  last_meeting_date TEXT NOT NULL,
+  last_call_date TEXT NOT NULL,
+  next_meeting_date TEXT NOT NULL,
+  follow_up TEXT NOT NULL
+);
+
+CREATE TABLE wealth_accounts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  account_number TEXT NOT NULL REFERENCES customers(account_number) ON DELETE CASCADE,
+  account_group TEXT NOT NULL,
+  account_name TEXT NOT NULL,
+  account_id TEXT NOT NULL,
+  balance INTEGER NOT NULL,
+  status TEXT NOT NULL,
+  sort_order INTEGER NOT NULL
+);
+
+CREATE TABLE wealth_life_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  account_number TEXT NOT NULL REFERENCES customers(account_number) ON DELETE CASCADE,
+  event_title TEXT NOT NULL,
+  event_date TEXT NOT NULL,
+  alert_date TEXT NOT NULL,
+  note_text TEXT NOT NULL,
+  sort_order INTEGER NOT NULL
+);
+
+CREATE TABLE wealth_interactions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  account_number TEXT NOT NULL REFERENCES customers(account_number) ON DELETE CASCADE,
+  interaction_type TEXT NOT NULL,
+  interaction_date TEXT NOT NULL,
+  owner TEXT NOT NULL,
+  note_text TEXT NOT NULL,
+  is_user_created INTEGER NOT NULL DEFAULT 0,
+  sort_order INTEGER NOT NULL
+);
+
+CREATE TABLE lending_profiles (
+  account_number TEXT PRIMARY KEY REFERENCES customers(account_number) ON DELETE CASCADE,
+  loan_status TEXT NOT NULL,
+  interest_rate TEXT NOT NULL,
+  monthly_payment INTEGER NOT NULL,
+  yearly_payment INTEGER NOT NULL,
+  monthly_income INTEGER NOT NULL,
+  pmi_status TEXT NOT NULL,
+  pmi_recommendation TEXT NOT NULL,
+  home_equity INTEGER NOT NULL,
+  heloc_status TEXT NOT NULL,
+  bill_amount_owed INTEGER NOT NULL,
+  past_due_amount INTEGER NOT NULL,
+  maturity_date TEXT NOT NULL,
+  closing_status TEXT NOT NULL,
+  split_payment_structure TEXT NOT NULL,
+  credit_score INTEGER NOT NULL,
+  available_loan_products TEXT NOT NULL
+);
+
+CREATE TABLE lending_documents (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  account_number TEXT NOT NULL REFERENCES customers(account_number) ON DELETE CASCADE,
+  document_name TEXT NOT NULL,
+  document_status TEXT NOT NULL,
+  last_updated TEXT NOT NULL,
+  sort_order INTEGER NOT NULL
+);
+
+CREATE TABLE lending_contact_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  account_number TEXT NOT NULL REFERENCES customers(account_number) ON DELETE CASCADE,
+  contact_type TEXT NOT NULL,
+  contact_date TEXT NOT NULL,
+  contact_value TEXT NOT NULL,
+  owner TEXT NOT NULL,
+  note_text TEXT NOT NULL,
+  is_user_created INTEGER NOT NULL DEFAULT 0,
   sort_order INTEGER NOT NULL
 );
 
