@@ -1,5 +1,6 @@
 (function attachCrmApi() {
-  const API_TIMEOUT_MS = 1200;
+  // Render free instances and first API calls after wake-up can be slow.
+  const API_TIMEOUT_MS = 10000;
   const LOCAL_LEADS_KEY = "crmSavedLeads";
   const LOCAL_NOTES_KEY = "crmSavedBankNotes";
   const LOCAL_FRAUD_NOTES_KEY = "crmSavedFraudNotes";
