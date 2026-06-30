@@ -7,16 +7,14 @@ services:
     runtime: docker
     plan: free            # free tier: sleeps after ~15 min idle, wakes in ~30s
     dockerfilePath: ./Dockerfile
-    # Persistent disk so added leads/notes survive restarts and redeploys.
-    disk:
-      name: crm-data
-      mountPath: /app/data
-      sizeGB: 1
     envVars:
       - key: HOST
         value: 0.0.0.0
       - key: DB_PATH
-        value: /app/data/crm.sqlite
+        # Free Render services do not support persistent disks, so use
+        # ephemeral storage. Upgrade to a paid plan and add a disk if you need
+        # leads/notes to survive restarts and redeploys.
+        value: /tmp/crm.sqlite
       # Password gate: set a value here (or in the Render dashboard). The site
       # will then prompt for username "demo" and this password. Leave unset to
       # run open. Marked sync:false so it isn't stored in the repo.
