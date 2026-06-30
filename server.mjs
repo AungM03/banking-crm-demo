@@ -72,8 +72,47 @@ ensureRegularCustomerExpansion();
 ensureHouseholdWealthProfiles();
 ensureLendingProfilesForLoanCustomers();
 
+const ACCESS_PASSWORD = PROCESS_ENV.ACCESS_PASSWORD || "";
+const ACCESS_USER = PROCESS_ENV.ACCESS_USER || "demo";
+
+// Optional site-wide password gate (HTTP Basic Auth). Activates only when
+// ACCESS_PASSWORD is set -- so local and static use are unaffected, but a
+// public deploy can be locked behind a shared password. Covers both static
+// files and the API. The browser shows a native login prompt.
+function passesAccessGate(request, response) {
+  if (!ACCESS_PASSWORD) {
+    return true; // gate disabled
+  }
+  const header = request.headers.authorization || "";
+  const [scheme, encoded] = header.split(" ");
+  if (scheme === "Basic" && encoded) {
+    let decoded = "";
+    try {
+      decoded = Buffer.from(encoded, "base64").toString("utf8");
+    } catch (err) {
+      decoded = "";
+    }
+    const sep = decoded.indexOf(":");
+    const user = sep >= 0 ? decoded.slice(0, sep) : "";
+    const pass = sep >= 0 ? decoded.slice(sep + 1) : "";
+    if (user === ACCESS_USER && pass === ACCESS_PASSWORD) {
+      return true;
+    }
+  }
+  response.writeHead(401, {
+    "WWW-Authenticate": 'Basic realm="CRM prototype", charset="UTF-8"',
+    "Content-Type": "text/plain"
+  });
+  response.end("Authentication required.");
+  return false;
+}
+
 const server = createServer((request, response) => {
   const requestUrl = new URL(request.url, `http://${request.headers.host}`);
+
+  if (!passesAccessGate(request, response)) {
+    return;
+  }
 
   if (requestUrl.pathname.startsWith("/api/")) {
     handleApi(request, requestUrl, response);

@@ -98,3 +98,13 @@ docker run --rm -p 4173:4173 crm-prototype node server.mjs --reset-db
 If you only need the click-through demo (no server features like SQL persistence
 or the AI layer), you can still just open `home.html` directly in a browser --
 no Docker required. Docker is for running the full server build.
+
+## Optional: password-protect the site
+
+Set `ACCESS_PASSWORD` to require a login before anything loads (username
+defaults to `demo`, override with `ACCESS_USER`). Useful for any shared/public
+run. Without it, the server runs open (fine for localhost).
+
+```bash
+docker run --rm -p 4173:4173 -e ACCESS_PASSWORD=choose-a-password crm-prototype
+```
