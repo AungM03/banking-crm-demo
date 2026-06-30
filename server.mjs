@@ -77,8 +77,9 @@ const ACCESS_USER = PROCESS_ENV.ACCESS_USER || "demo";
 
 // Optional site-wide password gate (HTTP Basic Auth). Activates only when
 // ACCESS_PASSWORD is set -- so local and static use are unaffected, but a
-// public deploy can be locked behind a shared password. Covers both static
-// files and the API. The browser shows a native login prompt.
+// public deploy can be locked behind a shared password. Covers HTML pages,
+// scripts, data, and the API. The stylesheet is public so browsers do not render
+// a bare HTML page if a subresource request misses the Basic Auth header.
 function passesAccessGate(request, response) {
   if (!ACCESS_PASSWORD) {
     return true; // gate disabled
@@ -107,10 +108,14 @@ function passesAccessGate(request, response) {
   return false;
 }
 
+function isPublicStaticAsset(requestUrl) {
+  return requestUrl.pathname === "/styles.css";
+}
+
 const server = createServer((request, response) => {
   const requestUrl = new URL(request.url, `http://${request.headers.host}`);
 
-  if (!passesAccessGate(request, response)) {
+  if (!isPublicStaticAsset(requestUrl) && !passesAccessGate(request, response)) {
     return;
   }
 
